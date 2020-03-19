@@ -1,0 +1,27 @@
+{
+  "config": {
+    "state-apis": {
+      "data-apps-config-manager": {
+        "Actions": {
+          "$refresh": { "APIRoot": "Refresh", "Security": "" },
+          "set-active-app": { "APIRoot": "SetActiveApp", "Security": "" },
+          "toggle-adding-app": { "APIRoot": "ToggleAddingApp", "Security": "" },
+          "save-data-app": { "APIRoot": "SaveDataApp", "Security": "" },
+          "save-app-view": { "APIRoot": "SaveAppView", "Security": "" }
+        },
+        "ActiveEnvironment": "prod",
+        "DefaultValue": { "Applications": [] },
+        "Description": "data-apps-config-manager",
+        "Environments": {
+          "prod": {
+            "Security": "x-functions-key~_____________",
+            "ServerAPIRoot": "https://_____________.azurewebsites.net/api/"
+          }
+        },
+        "Lookup": "data-apps-config-manager",
+        "Name": "data-apps-config-manager",
+        "UseUsername": true
+      }
+    }
+  }
+}

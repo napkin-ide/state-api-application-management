@@ -7,49 +7,46 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Fathym;
-using Microsoft.WindowsAzure.Storage.Blob;
 using System.Runtime.Serialization;
-using Fathym.API;
-using System.Collections.Generic;
-using System.Linq;
+using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Applications;
+using Fathym;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.WindowsAzure.Storage.Blob;
 using LCU.StateAPI.Utilities;
-using System.Security.Claims;
-using LCU.Personas.Client.Enterprises;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement
 {
     [Serializable]
     [DataContract]
-    public class RefreshRequest : BaseRequest
-    { }
+    public class SetActiveAppRequest
+    {
+        [DataMember]
+        public virtual Application App { get; set; }
+    }
 
-    public class Refresh
+    public class SetActiveApp
     {
         protected ApplicationManagerClient appMgr;
 
-        public Refresh(ApplicationManagerClient appMgr)
+        public SetActiveApp(ApplicationManagerClient appMgr)
         {
             this.appMgr = appMgr;
         }
 
-        [FunctionName("Refresh")]
+        [FunctionName("SetActiveApp")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<ApplicationManagementState, RefreshRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
-                async (harness, refreshReq, actReq) =>
+            return await stateBlob.WithStateHarness<ApplicationManagementState, SaveDataAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
+                async (harness, reqData, actReq) =>
             {
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.Ensure(appMgr, stateDetails.EnterpriseAPIKey);
+                log.LogInformation($"Setting Active App: {reqData.App.Name}");
 
-                log.LogInformation($"Refreshing.");
-
-                await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
+                await harness.SetActiveApp(appMgr, stateDetails.EnterpriseAPIKey, reqData.App);
             });
         }
     }

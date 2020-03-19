@@ -35,6 +35,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         public virtual DAFApplicationConfiguration ActiveDAFApp { get; set; }
 
         [DataMember]
+        public virtual string ActiveHost { get; set; }
+
+        [DataMember]
         public virtual bool AddingApp { get; set; }
 
         [DataMember]
@@ -43,6 +46,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         [DataMember]
         [JsonConverter(typeof(StringEnumConverter))]
         public virtual DAFAppTypes? AppType { get; set; }
+
+        [DataMember]
+        public virtual List<string> HostOptions { get; set; }
 
         [DataMember]
         public virtual bool Loading { get; set; }
@@ -59,5 +65,15 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         
         [EnumMember]
         Redirect
+    }
+    
+    [DataContract]
+    public enum AddNewTypes
+    {
+        [EnumMember]
+        None,
+        
+        [EnumMember]
+        App,
     }
 }
