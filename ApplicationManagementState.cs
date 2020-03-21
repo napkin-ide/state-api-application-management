@@ -32,6 +32,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         public virtual Application ActiveApp { get; set; }
 
         [DataMember]
+        public List<DAFAPIConfiguration> ActiveDAFAPIs { get; internal set; }
+
+        [DataMember]
         public virtual DAFApplicationConfiguration ActiveDAFApp { get; set; }
 
         [DataMember]

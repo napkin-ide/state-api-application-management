@@ -64,9 +64,29 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         {
             if (State.ActiveApp != null)
             {
-                var apps = await appMgr.ListDAFApplications(entApiKey, State.ActiveApp.ID);
+                var dafApps = await appMgr.ListDAFApplications(entApiKey, State.ActiveApp.ID);
 
-                State.ActiveDAFApp = apps?.Model?.FirstOrDefault()?.JSONConvert<DAFApplicationConfiguration>();
+                if (dafApps.Status)
+                {
+                    if (dafApps.Model.Count < 2)
+                    {
+                        State.ActiveDAFApp = dafApps?.Model?.FirstOrDefault()?.JSONConvert<DAFApplicationConfiguration>();
+
+                        State.ActiveDAFAPIs = null;
+                    }
+                    else
+                    {
+                        State.ActiveDAFAPIs = dafApps?.Model?.Select(da => da?.JSONConvert<DAFAPIConfiguration>())?.ToList();
+
+                        State.ActiveDAFApp = null;
+                    }
+                }
+                else
+                {
+                    State.ActiveDAFApp = null;
+
+                    State.ActiveDAFAPIs = null;
+                }
 
                 if (State.ActiveDAFApp != null)
                 {
@@ -77,12 +97,14 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                     else if (State.ActiveDAFApp.Metadata.ContainsKey("BaseHref"))
                         await SetViewType(DAFAppTypes.View);
                 }
+                else if (!State.ActiveDAFAPIs.IsNullOrEmpty())
+                    await SetViewType(DAFAppTypes.API);
             }
             else
                 State.ActiveDAFApp = null;
         }
 
-        public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey, 
+        public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey,
             DAFApplicationConfiguration dafApp)
         {
             if (State.ActiveApp != null)
@@ -128,7 +150,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
             await SetActiveApp(appMgr, entApiKey, State.ActiveApp);
         }
 
-        public virtual async Task SaveDataApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey, 
+        public virtual async Task SaveDataApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey,
             Application app)
         {
             var appResp = await appDev.SaveApp(app, State.ActiveHost, "lcu-data-apps", entApiKey);
@@ -143,6 +165,11 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
             State.ActiveApp = app;
 
             await LoadAppView(appMgr, entApiKey);
+        }
+
+        public virtual async Task SetActiveDAFAPIApp(Guid dafApiAppId)
+        {
+            State.ActiveDAFApp = State.ActiveDAFAPIs?.FirstOrDefault(da => da.ID == dafApiAppId);
         }
 
         public virtual async Task SetViewType(DAFAppTypes appType)

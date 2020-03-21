@@ -19,31 +19,31 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
 {
     [Serializable]
     [DataContract]
-    public class SaveAppViewRequest
+    public class SaveDAFAppRequest
     {
         [DataMember]
         public virtual DAFApplicationConfiguration DAFApp { get; set; }
     }
 
-    public class SaveAppView
+    public class SaveDAFApp
     {
         protected ApplicationDeveloperClient appDev;
 
         protected ApplicationManagerClient appMgr;
 
-        public SaveAppView(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr)
+        public SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr)
         {
             this.appDev = appDev;
             
             this.appMgr = appMgr;
         }
 
-        [FunctionName("SaveAppView")]
+        [FunctionName("SaveDAFApp")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<ApplicationManagementState, SaveAppViewRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
+            return await stateBlob.WithStateHarness<ApplicationManagementState, SaveDAFAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
                 async (harness, reqData, actReq) =>
             {
                 log.LogInformation($"Refresh");

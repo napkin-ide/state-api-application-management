@@ -5,7 +5,7 @@
     <RootNamespace>state_api_application_management</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LCU.StateAPI" Version="1.161.20078.1" />
+    <PackageReference Include="LCU.StateAPI" Version="1.162.20079.2" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.1.1" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.1" />
