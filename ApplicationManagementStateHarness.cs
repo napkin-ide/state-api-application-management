@@ -206,7 +206,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
 
         public virtual async Task ToggleAppAsDefault(ApplicationManagerClient appMgr, ApplicationDeveloperClient appDev, string entApiKey, Guid appId)
         {
-            await appDev.ToggleAppAsDefault(entApiKey, appId);
+            var response = await appDev.ToggleAppAsDefault(entApiKey, appId);
 
             await LoadDefaultApps(appMgr, entApiKey);
         }
