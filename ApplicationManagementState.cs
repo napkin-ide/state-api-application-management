@@ -38,9 +38,6 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         public virtual DAFApplicationConfiguration ActiveDAFApp { get; set; }
 
         [DataMember]
-        public virtual string ActiveHost { get; set; }
-
-        [DataMember]
         public virtual bool AddingApp { get; set; }
 
         [DataMember]

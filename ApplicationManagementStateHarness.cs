@@ -150,10 +150,10 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
             await SetActiveApp(appMgr, entApiKey, State.ActiveApp);
         }
 
-        public virtual async Task SaveDataApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey,
+        public virtual async Task SaveDataApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey, string host,
             Application app)
         {
-            var appResp = await appDev.SaveApp(app, State.ActiveHost, "lcu-data-apps", entApiKey);
+            var appResp = await appDev.SaveApp(app, host, "lcu-data-apps", entApiKey);
 
             await SetActiveApp(appMgr, entApiKey, appResp.Model);
         }
