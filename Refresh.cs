@@ -50,6 +50,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 log.LogInformation($"Refreshing.");
 
                 await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
+
+                await harness.LoadDefaultApps(appMgr, stateDetails.EnterpriseAPIKey);
             });
         }
     }

@@ -104,6 +104,17 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 State.ActiveDAFApp = null;
         }
 
+        public virtual async Task LoadDefaultApps(ApplicationManagerClient appMgr, string entApiKey)
+        {
+            var apps = await appMgr.ListDefaultApplications(entApiKey);
+
+            State.DefaultApps = apps.Model;
+
+            var defApps = await appMgr.HasDefaultApplications(entApiKey);
+
+            State.DefaultAppsEnabled = defApps.Status;
+        }
+
         public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey,
             DAFApplicationConfiguration dafApp)
         {
@@ -191,6 +202,13 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                     State.AddingApp = false;
                     break;
             }
+        }
+
+        public virtual async Task ToggleAppAsDefault(ApplicationManagerClient appMgr, ApplicationDeveloperClient appDev, string entApiKey, Guid appId)
+        {
+            await appDev.ToggleAppAsDefault(entApiKey, appId);
+
+            await LoadDefaultApps(appMgr, entApiKey);
         }
         #endregion
     }

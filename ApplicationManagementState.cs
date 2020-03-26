@@ -32,7 +32,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         public virtual Application ActiveApp { get; set; }
 
         [DataMember]
-        public List<DAFAPIConfiguration> ActiveDAFAPIs { get; internal set; }
+        public List<DAFAPIConfiguration> ActiveDAFAPIs { get; set; }
 
         [DataMember]
         public virtual DAFApplicationConfiguration ActiveDAFApp { get; set; }
@@ -46,6 +46,12 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         [DataMember]
         [JsonConverter(typeof(StringEnumConverter))]
         public virtual DAFAppTypes? AppType { get; set; }
+
+        [DataMember]
+        public virtual List<Application> DefaultApps { get; set; }
+
+        [DataMember]
+        public virtual Status DefaultAppsEnabled { get; set; }
 
         [DataMember]
         public virtual List<string> HostOptions { get; set; }
