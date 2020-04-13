@@ -47,6 +47,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 log.LogInformation($"Setting Active App: {reqData.App.Name}");
 
                 await harness.SetActiveApp(appMgr, stateDetails.EnterpriseAPIKey, reqData.App);
+
+                return Status.Success;
             });
         }
     }

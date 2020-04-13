@@ -50,6 +50,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
                 await harness.ToggleAppAsDefault(appMgr, appDev, stateDetails.EnterpriseAPIKey, reqData.AppID);
+
+                return Status.Success;
             });
         }
     }

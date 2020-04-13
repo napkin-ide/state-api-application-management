@@ -39,6 +39,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 log.LogInformation($"Setting View Type: {reqData.AppType}");
 
                 await harness.SetViewType(reqData.AppType);
+
+                return Status.Success;
             });
         }
     }

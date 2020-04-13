@@ -47,6 +47,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 log.LogInformation($"Setting Active DAF API App: {reqData.DAFAPIAppID}");
 
                 await harness.SetActiveDAFAPIApp(reqData.DAFAPIAppID);
+
+                return Status.Success;
             });
         }
     }

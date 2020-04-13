@@ -38,6 +38,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 log.LogInformation($"Toggling Adding App");
 
                 await harness.ToggleAddNew(AddNewTypes.App);
+
+                return Status.Success;
             });
         }
     }

@@ -53,6 +53,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 log.LogInformation($"Saving Data App: {reqData.App.Name}");
 
                 await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
+
+                return Status.Success;
             });
         }
     }

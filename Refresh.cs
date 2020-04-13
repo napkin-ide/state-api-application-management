@@ -52,6 +52,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
 
                 await harness.LoadDefaultApps(appMgr, stateDetails.EnterpriseAPIKey);
+
+                return Status.Success;
             });
         }
     }
