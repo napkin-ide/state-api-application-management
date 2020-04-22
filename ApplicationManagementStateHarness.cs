@@ -56,7 +56,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         {
             var accessRightsResp = await idMgr.ListAccessRights(entApiKey);
 
-            State.AccessRightOptions = accessRightsResp.Model ?? new List<string>();
+            State.AccessRightOptions = accessRightsResp?.Model.Select(ar => ar.Lookup).ToList() ?? new List<string>();
         }
 
         public virtual async Task LoadApplications(ApplicationManagerClient appMgr, string entApiKey)
