@@ -18,6 +18,7 @@ using LCU.Personas.Client.Applications;
 using LCU.StateAPI.Utilities;
 using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
+using LCU.Personas.Client.Identity;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement
 {
@@ -30,9 +31,13 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
     {
         protected ApplicationManagerClient appMgr;
 
-        public Refresh(ApplicationManagerClient appMgr)
+        protected IdentityManagerClient idMgr;
+
+        public Refresh(ApplicationManagerClient appMgr, IdentityManagerClient idMgr)
         {
             this.appMgr = appMgr;
+
+            this.idMgr = idMgr;
         }
 
         [FunctionName("Refresh")]
@@ -48,6 +53,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 await harness.Ensure(appMgr, stateDetails.EnterpriseAPIKey);
 
                 log.LogInformation($"Refreshing.");
+
+                await harness.LoadAccessRightOptions(idMgr, stateDetails.EnterpriseAPIKey);
 
                 await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
 

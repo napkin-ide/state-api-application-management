@@ -29,6 +29,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         #endregion
 
         [DataMember]
+        public virtual List<string> AccessRightOptions { get; set; }
+
+        [DataMember]
         public virtual Application ActiveApp { get; set; }
 
         [DataMember]

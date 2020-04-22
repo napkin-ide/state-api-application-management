@@ -22,6 +22,7 @@ using LCU.Personas.Client.DevOps;
 using LCU.Personas.Enterprises;
 using LCU.Personas.Client.Applications;
 using LCU.Graphs.Registry.Enterprises.Apps;
+using LCU.Personas.Client.Identity;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement
 {
@@ -49,6 +50,13 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
 
             if (State.ActiveApp != null)
                 await SetActiveApp(appMgr, entApiKey, State.ActiveApp);
+        }
+
+        public virtual async Task LoadAccessRightOptions(IdentityManagerClient idMgr, string entApiKey)
+        {
+            var accessRightsResp = await idMgr.ListAccessRights(entApiKey);
+
+            State.AccessRightOptions = accessRightsResp.Model ?? new List<string>();
         }
 
         public virtual async Task LoadApplications(ApplicationManagerClient appMgr, string entApiKey)
