@@ -12,6 +12,7 @@ using LCU.Personas.Client.Security;
 using System.Linq;
 using System;
 using LCU.StateAPI;
+using LCU.StateAPI.Hosting;
 
 [assembly: FunctionsStartup(typeof(LCU.State.API.NapkinIDE.ApplicationManagement.Startup))]
 
