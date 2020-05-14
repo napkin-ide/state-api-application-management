@@ -48,6 +48,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
             {
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
+                // appMgr.SetAuthorization(stateDetails)
+
                 await harness.SaveDataApp(appDev, appMgr, stateDetails.EnterpriseAPIKey, stateDetails.Host, reqData.App);
 
                 log.LogInformation($"Saving Data App: {reqData.App.Name}");
