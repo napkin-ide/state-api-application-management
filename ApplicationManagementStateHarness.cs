@@ -66,6 +66,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
             State.Applications = apps.Model.Where(app => app.Container == "lcu-data-apps").ToList();
 
             State.ActiveApp = State.Applications.FirstOrDefault(app => app.ID == State.ActiveApp?.ID);
+
+            await LoadDAFAppOptions(appMgr, entApiKey);
         }
 
         public virtual async Task LoadAppView(ApplicationManagerClient appMgr, string entApiKey)
@@ -110,6 +112,21 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
             }
             else
                 State.ActiveDAFApp = null;
+        }
+
+        public virtual async Task LoadDAFAppOptions(ApplicationManagerClient appMgr, string entApiKey)
+        {
+            State.DAFAppOptions = new Dictionary<string, string>();
+
+            if (!State.Applications.IsNullOrEmpty())
+            {
+                await State.Applications.Each(async app =>
+                {
+                    var dafApps = await appMgr.ListDAFApplications(entApiKey, app.ID);
+
+                    dafApps.Model.Each(dafApp => State.DAFAppOptions[$"{app.Name} {dafApp.Lookup}"] = dafApp.ID.ToString());
+                });
+            }
         }
 
         public virtual async Task LoadDefaultApps(ApplicationManagerClient appMgr, string entApiKey)
@@ -184,6 +201,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
             State.ActiveApp = app;
 
             await LoadAppView(appMgr, entApiKey);
+
+            await LoadDAFAppOptions(appMgr, entApiKey);
         }
 
         public virtual async Task SetActiveDAFAPIApp(Guid dafApiAppId)

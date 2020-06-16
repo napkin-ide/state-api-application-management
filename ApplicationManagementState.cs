@@ -51,6 +51,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         public virtual DAFAppTypes? AppType { get; set; }
 
         [DataMember]
+        public Dictionary<string, string> DAFAppOptions { get; set; }
+
+        [DataMember]
         public virtual List<Application> DefaultApps { get; set; }
 
         [DataMember]
