@@ -124,7 +124,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 {
                     var dafApps = await appMgr.ListDAFApplications(entApiKey, app.ID);
 
-                    dafApps.Model.Each(dafApp => State.DAFAppOptions[$"{app.Name} {dafApp.Lookup}"] = dafApp.ID.ToString());
+                    dafApps.Model.Each(dafApp => State.DAFAppOptions[dafApp.ID.ToString()] = $"{app.Name} {dafApp.Lookup}");
                 });
             }
         }
