@@ -106,6 +106,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                         await SetViewType(DAFAppTypes.Redirect);
                     else if (State.ActiveDAFApp.Metadata.ContainsKey("BaseHref"))
                         await SetViewType(DAFAppTypes.View);
+                    else if (State.ActiveDAFApp.Metadata.ContainsKey("DAFApplicationID"))
+                        await SetViewType(DAFAppTypes.DAFApp);
                 }
                 else if (!State.ActiveDAFAPIs.IsNullOrEmpty())
                     await SetViewType(DAFAppTypes.API);
@@ -176,6 +178,12 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
 
                     if (dafApp.Metadata.ContainsKey("PackageVersion"))
                         dafApp.Metadata.Remove("PackageVersion");
+                }
+
+                if (State.AppType != DAFAppTypes.DAFApp)
+                {
+                    if (dafApp.Metadata.ContainsKey("DAFApplicationID"))
+                        dafApp.Metadata.Remove("DAFApplicationID");
                 }
 
                 var dafAppResp = await appDev.SaveDAFApps(new[] { dafApp }.ToList(), State.ActiveApp.ID, entApiKey);
