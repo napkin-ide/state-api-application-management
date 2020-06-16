@@ -76,7 +76,10 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         API,
         
         [EnumMember]
-        Redirect
+        Redirect,
+        
+        [EnumMember]
+        DAFApp
     }
     
     [DataContract]
