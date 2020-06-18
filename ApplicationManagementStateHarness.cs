@@ -184,6 +184,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
                 {
                     if (dafApp.Metadata.ContainsKey("DAFApplicationID"))
                         dafApp.Metadata.Remove("DAFApplicationID");
+
+                    if (dafApp.Metadata.ContainsKey("DAFApplicationRoot"))
+                        dafApp.Metadata.Remove("DAFApplicationRoot");
                 }
 
                 var dafAppResp = await appDev.SaveDAFApps(new[] { dafApp }.ToList(), State.ActiveApp.ID, entApiKey);
