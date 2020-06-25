@@ -9,44 +9,49 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Runtime.Serialization;
 using LCU.Graphs.Registry.Enterprises.Apps;
-using LCU.Personas.Client.Applications;
-using Fathym;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Fathym;
 using LCU.StateAPI.Utilities;
+using LCU.Personas.Client.Applications;
+using LCU.State.API.NapkinIDE.ApplicationManagement.State;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.Applications
 {
     [Serializable]
     [DataContract]
-    public class SetActiveDAFAPIAppRequest
+    public class SaveDAFAppRequest
     {
         [DataMember]
-        public virtual Guid DAFAPIAppID { get; set; }
+        public virtual DAFApplicationConfiguration DAFApp { get; set; }
     }
 
-    public class SetActiveDAFAPIApp
+    public class SaveDAFApp
     {
+        protected ApplicationDeveloperClient appDev;
+
         protected ApplicationManagerClient appMgr;
 
-        public SetActiveDAFAPIApp(ApplicationManagerClient appMgr)
+        public SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr)
         {
+            this.appDev = appDev;
+            
             this.appMgr = appMgr;
         }
 
-        [FunctionName("SetActiveDAFAPIApp")]
+        [FunctionName("SaveDAFApp")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<ApplicationManagementState, SetActiveDAFAPIAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
+            return await stateBlob.WithStateHarness<ApplicationManagementState, SaveDAFAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
                 async (harness, reqData, actReq) =>
             {
+                log.LogInformation($"Refresh");
+
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                log.LogInformation($"Setting Active DAF API App: {reqData.DAFAPIAppID}");
-
-                await harness.SetActiveDAFAPIApp(reqData.DAFAPIAppID);
+                await harness.SaveDAFApp(appDev, appMgr, stateDetails.EnterpriseAPIKey, reqData.DAFApp);
 
                 return Status.Success;
             });

@@ -7,54 +7,59 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Runtime.Serialization;
-using LCU.Graphs.Registry.Enterprises.Apps;
-using LCU.Personas.Client.Applications;
-using Fathym;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Fathym;
 using Microsoft.WindowsAzure.Storage.Blob;
+using System.Runtime.Serialization;
+using Fathym.API;
+using System.Collections.Generic;
+using System.Linq;
+using LCU.Personas.Client.Applications;
 using LCU.StateAPI.Utilities;
+using System.Security.Claims;
+using LCU.Personas.Client.Enterprises;
+using LCU.Personas.Client.Identity;
+using LCU.State.API.NapkinIDE.ApplicationManagement.State;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
 {
     [Serializable]
     [DataContract]
-    public class SaveDataAppRequest
-    {
-        [DataMember]
-        public virtual Application App { get; set; }
-    }
+    public class RefreshRequest : BaseRequest
+    { }
 
-    public class SaveDataApp
+    public class Refresh
     {
-        protected ApplicationDeveloperClient appDev;
-
         protected ApplicationManagerClient appMgr;
 
-        public SaveDataApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr)
+        protected IdentityManagerClient idMgr;
+
+        public Refresh(ApplicationManagerClient appMgr, IdentityManagerClient idMgr)
         {
-            this.appDev = appDev;
-            
             this.appMgr = appMgr;
+
+            this.idMgr = idMgr;
         }
 
-        [FunctionName("SaveDataApp")]
+        [FunctionName("Refresh")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<ApplicationManagementState, SaveDataAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
-                async (harness, reqData, actReq) =>
+            return await stateBlob.WithStateHarness<ApplicationManagementState, RefreshRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
+                async (harness, refreshReq, actReq) =>
             {
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                // appMgr.SetAuthorization(stateDetails)
+                await harness.Ensure(appMgr, stateDetails.EnterpriseAPIKey);
 
-                await harness.SaveDataApp(appDev, appMgr, stateDetails.EnterpriseAPIKey, stateDetails.Host, reqData.App);
+                log.LogInformation($"Refreshing.");
 
-                log.LogInformation($"Saving Data App: {reqData.App.Name}");
+                await harness.LoadAccessRightOptions(idMgr, stateDetails.EnterpriseAPIKey);
 
                 await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
+
+                await harness.LoadDefaultApps(appMgr, stateDetails.EnterpriseAPIKey);
 
                 return Status.Success;
             });

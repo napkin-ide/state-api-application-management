@@ -13,8 +13,9 @@ using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.WindowsAzure.Storage.Blob;
 using LCU.StateAPI.Utilities;
 using LCU.Personas.Client.Applications;
+using LCU.State.API.NapkinIDE.ApplicationManagement.State;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.Applications
 {
 	[Serializable]
 	[DataContract]

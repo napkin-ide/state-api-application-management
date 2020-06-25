@@ -24,7 +24,7 @@ using LCU.Personas.Client.Applications;
 using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Identity;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
     public class ApplicationManagementStateHarness : LCUStateHarness<ApplicationManagementState>
     {

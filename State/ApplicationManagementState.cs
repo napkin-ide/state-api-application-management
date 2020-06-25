@@ -18,7 +18,7 @@ using System.Runtime.Serialization;
 using System.Collections.Generic;
 using LCU.Graphs.Registry.Enterprises.Apps;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
     [Serializable]
     [DataContract]
