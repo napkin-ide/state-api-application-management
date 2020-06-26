@@ -66,15 +66,13 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             {
                 var pathParts = app.PathRegex.Replace("*", "").Split('/');
 
-                var pathRoot = pathParts.FirstOrDefault(pathParts => pathParts != null);
+                var pathRoot = pathParts.FirstOrDefault(pathPart => !pathPart.IsNullOrEmpty() || pathParts.All(pp => pp.IsNullOrEmpty()));
 
                 return $"/{pathRoot}";
             }).Select(appGroup =>
             {
                 return new DataAppDetails()
                 {
-                    Name = appGroup.LastOrDefault()?.Name,
-                    Description = appGroup.LastOrDefault()?.Name,
                     AppIDs = appGroup.ToDictionary(ag => ag.ID, ag => ag.PathRegex.Replace("*", "")),
                     PathGroup = appGroup.Key,
                     AppStati = calculateAppStati(appGroup.Key, appGroup.ToList()).Result
@@ -82,20 +80,16 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             }).ToList();
 
             await SetActiveApp(appMgr, entApiKey,
-                State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPath)?.PathGroup);
-
-            await LoadDAFApplications(appMgr, entApiKey);
-
-            await LoadDAFAppOptions(appMgr, entApiKey);
+                State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup)?.PathGroup);
         }
 
         public virtual async Task LoadAppView(ApplicationManagerClient appMgr, string entApiKey)
         {
-            if (State.ActiveAppPath != null)
+            if (State.ActiveAppPathGroup != null)
             {
-                var appDetails = State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPath);
+                var appDetails = State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
 
-                var dafApps = appDetails.AppIDs.SelectMany(appId => State.DAFApplications[appId.Key]).ToList();
+                var dafApps = State.DAFApplications;
 
                 if (!dafApps.IsNullOrEmpty())
                 {
@@ -143,19 +137,19 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task LoadDAFApplications(ApplicationManagerClient appMgr, string entApiKey)
         {
-            State.DAFApplications = new Dictionary<Guid, List<DAFApplicationConfiguration>>();
+            State.DAFApplications = new List<DAFApplicationConfiguration>();
 
-            if (!State.Applications.IsNullOrEmpty())
+            if (!State.Applications.IsNullOrEmpty() && !State.ActiveAppPathGroup.IsNullOrEmpty())
             {
-                await State.Applications.Each(async app =>
-                {
-                    await app.AppIDs.Each(async appId =>
-                    {
-                        var dafApps = await appMgr.ListDAFApplications(entApiKey, appId.Key);
+                var activeApp = State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
 
-                        State.DAFApplications[appId.Key] = dafApps.Model ?? new List<DAFApplicationConfiguration>();
-                    }, parallel: true);
-                }, parallel: true);
+                await activeApp.AppIDs.Each(async appId =>
+                {
+                    var dafApps = await appMgr.ListDAFApplications(entApiKey, appId.Key);
+
+                    lock (activeApp)
+                        State.DAFApplications.AddRange(dafApps.Model ?? new List<DAFApplicationConfiguration>());
+                });
             }
         }
 
@@ -163,27 +157,29 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         {
             State.DAFAppOptions = new Dictionary<string, string>();
 
-            if (!State.Applications.IsNullOrEmpty())
-            {
-                await State.Applications.Each(async app =>
-                {
-                    await app.AppIDs.Each(async appId =>
-                    {
-                        var dafApps = State.DAFApplications[appId.Key];
+            // if (!State.Applications.IsNullOrEmpty() && !State.DAFApplications.IsNullOrEmpty())
+            // {
+            //     await State.Applications.Each(async app =>
+            //     {
+            //         await app.AppIDs.Each(async appId =>
+            //         {
+            //             var dafApps = State.DAFApplications[appId.Key];
 
-                        dafApps.Each(dafApp => State.DAFAppOptions[dafApp.ID.ToString()] = $"{app.Name} {appId.Value} {dafApp.Lookup}");
-                    });
-                });
-            }
+            //             dafApps.Each(dafApp => State.DAFAppOptions[dafApp.ID.ToString()] = $"{app.Name} {appId.Value} {dafApp.Lookup}");
+            //         });
+            //     });
+            // }
         }
 
-        public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entApiKey, string appPath)
+        public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entApiKey, string appPathGroup)
         {
-            State.ActiveAppPath = appPath;
+            State.ActiveAppPathGroup = appPathGroup;
+
+            await LoadDAFApplications(appMgr, entApiKey);
+
+            // await LoadDAFAppOptions(appMgr, entApiKey);
 
             await LoadAppView(appMgr, entApiKey);
-
-            await LoadDAFAppOptions(appMgr, entApiKey);
         }
         #endregion
 

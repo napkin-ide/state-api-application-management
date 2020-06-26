@@ -28,13 +28,13 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual List<string> AccessRightOptions { get; set; }
 
         [DataMember]
-        public virtual string ActiveAppPath { get; set; }
+        public virtual string ActiveAppPathGroup { get; set; }
         
         [DataMember]
         public virtual List<DataAppDetails> Applications { get; set; }
         
         [DataMember]
-        public virtual Dictionary<Guid, List<DAFApplicationConfiguration>> DAFApplications { get; set; }
+        public virtual List<DAFApplicationConfiguration> DAFApplications { get; set; }
         
         [DataMember]
         public Dictionary<string, string> DAFAppOptions { get; set; }
@@ -54,13 +54,21 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual List<DAFAppStatus> AppStati { get; set; }
         
         [DataMember]
+        public virtual string PathGroup { get; set; }
+    }
+    
+    [Serializable]
+    [DataContract]
+    public class DataAppDAFDetails
+    {
+        [DataMember]
         public virtual string Description { get; set; }
         
         [DataMember]
         public virtual string Name { get; set; }
         
         [DataMember]
-        public virtual string PathGroup { get; set; }
+        public virtual string Path { get; set; }
     }
     
     [Serializable]

@@ -16,38 +16,38 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using LCU.StateAPI.Utilities;
 using LCU.State.API.NapkinIDE.ApplicationManagement.State;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement.Applications
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.DataApps
 {
     [Serializable]
     [DataContract]
-    public class SetActiveAppRequest
+    public class SetActiveDataAppRequest
     {
         [DataMember]
-        public virtual Application App { get; set; }
+        public virtual string AppPathGroup { get; set; }
     }
 
-    public class SetActiveApp
+    public class SetActiveDataApp
     {
         protected ApplicationManagerClient appMgr;
 
-        public SetActiveApp(ApplicationManagerClient appMgr)
+        public SetActiveDataApp(ApplicationManagerClient appMgr)
         {
             this.appMgr = appMgr;
         }
 
-        [FunctionName("SetActiveApp")]
+        [FunctionName("SetActiveDataApp")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<ApplicationManagementState, SetActiveAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
+            return await stateBlob.WithStateHarness<DataAppsManagementState, SetActiveDataAppRequest, DataAppsManagementStateHarness>(req, signalRMessages, log,
                 async (harness, reqData, actReq) =>
             {
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                log.LogInformation($"Setting Active App: {reqData.App.Name}");
+                log.LogInformation($"Setting Active App: {reqData.AppPathGroup}");
 
-                await harness.SetActiveApp(appMgr, stateDetails.EnterpriseAPIKey, reqData.App);
+                await harness.SetActiveApp(appMgr, stateDetails.EnterpriseAPIKey, reqData.AppPathGroup);
 
                 return Status.Success;
             });
