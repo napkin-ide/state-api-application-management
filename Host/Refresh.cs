@@ -55,7 +55,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
                 return await stateBlob.WithStateHarness<DataAppsManagementState, RefreshRequest, DataAppsManagementStateHarness>(req, signalRMessages, log,
                     async (harness, refreshReq, actReq) =>
                 {
-                    await harness.Ensure(appMgr, stateDetails.EnterpriseAPIKey);
+                    await harness.Ensure(appMgr, idMgr, stateDetails.EnterpriseAPIKey);
 
                     return Status.Success;
                 });

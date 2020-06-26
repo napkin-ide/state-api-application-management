@@ -25,6 +25,55 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
     public class DataAppsManagementState
     {
         [DataMember]
+        public virtual List<string> AccessRightOptions { get; set; }
+
+        [DataMember]
+        public virtual string ActiveAppPath { get; set; }
+        
+        [DataMember]
+        public virtual List<DataAppDetails> Applications { get; set; }
+        
+        [DataMember]
+        public virtual Dictionary<Guid, List<DAFApplicationConfiguration>> DAFApplications { get; set; }
+        
+        [DataMember]
+        public Dictionary<string, string> DAFAppOptions { get; set; }
+
+        [DataMember]
         public virtual bool Loading { get; set; }
+    }
+    
+    [Serializable]
+    [DataContract]
+    public class DataAppDetails
+    {
+        [DataMember]
+        public virtual Dictionary<Guid, string> AppIDs { get; set; }
+        
+        [DataMember]
+        public virtual List<DAFAppStatus> AppStati { get; set; }
+        
+        [DataMember]
+        public virtual string Description { get; set; }
+        
+        [DataMember]
+        public virtual string Name { get; set; }
+        
+        [DataMember]
+        public virtual string PathGroup { get; set; }
+    }
+    
+    [Serializable]
+    [DataContract]
+    public class DAFAppStatus : Status
+    {
+        [DataMember]
+        public virtual int AppCount { get; set; }
+        
+        [DataMember]
+        public virtual LCUIcon Icon { get; set; }
+        
+        [DataMember]
+        public virtual string Name { get; set; }
     }
 }
