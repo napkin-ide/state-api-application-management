@@ -43,26 +43,41 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
 
         [FunctionName("Refresh")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = ApplicationManagementState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<ApplicationManagementState, RefreshRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
-                async (harness, refreshReq, actReq) =>
+            var stateDetails = StateUtils.LoadStateDetails(req);
+
+            if (stateDetails.StateKey == "data-apps")
             {
-                var stateDetails = StateUtils.LoadStateDetails(req);
+                log.LogInformation($"Refreshing Data Applications Management State.");
 
-                await harness.Ensure(appMgr, stateDetails.EnterpriseAPIKey);
+                return await stateBlob.WithStateHarness<DataAppsManagementState, RefreshRequest, DataAppsManagementStateHarness>(req, signalRMessages, log,
+                    async (harness, refreshReq, actReq) =>
+                {
+                    await harness.Ensure(appMgr, stateDetails.EnterpriseAPIKey);
 
-                log.LogInformation($"Refreshing.");
+                    return Status.Success;
+                });
+            }
+            else
+            {
+                log.LogInformation($"Refreshing Application Management State.");
 
-                await harness.LoadAccessRightOptions(idMgr, stateDetails.EnterpriseAPIKey);
+                return await stateBlob.WithStateHarness<ApplicationManagementState, RefreshRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
+                    async (harness, refreshReq, actReq) =>
+                {
+                    await harness.Ensure(appMgr, stateDetails.EnterpriseAPIKey);
 
-                await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
+                    await harness.LoadAccessRightOptions(idMgr, stateDetails.EnterpriseAPIKey);
 
-                await harness.LoadDefaultApps(appMgr, stateDetails.EnterpriseAPIKey);
+                    await harness.LoadApplications(appMgr, stateDetails.EnterpriseAPIKey);
 
-                return Status.Success;
-            });
+                    await harness.LoadDefaultApps(appMgr, stateDetails.EnterpriseAPIKey);
+
+                    return Status.Success;
+                });
+            }
         }
     }
 }

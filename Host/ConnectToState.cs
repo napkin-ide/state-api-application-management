@@ -24,7 +24,12 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRGroupAction> signalRGroupActions,
             [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await signalRMessages.ConnectToState<ApplicationManagementState>(req, log, claimsPrincipal, stateBlob, signalRGroupActions);
+            var stateDetails = StateUtils.LoadStateDetails(req);
+
+            if (stateDetails.StateKey == "data-apps")
+                return await signalRMessages.ConnectToState<DataAppsManagementState>(req, log, claimsPrincipal, stateBlob, signalRGroupActions);
+            else
+                return await signalRMessages.ConnectToState<ApplicationManagementState>(req, log, claimsPrincipal, stateBlob, signalRGroupActions);
         }
     }
 }
