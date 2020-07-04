@@ -137,7 +137,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task LoadDAFApplications(ApplicationManagerClient appMgr, string entApiKey)
         {
-            State.DAFApplications = new List<DAFApplicationConfiguration>();
+            State.DAFApplications = new List<DataDAFAppDetails>();
 
             if (!State.Applications.IsNullOrEmpty() && !State.ActiveAppPathGroup.IsNullOrEmpty())
             {
@@ -147,8 +147,24 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 {
                     var dafApps = await appMgr.ListDAFApplications(entApiKey, appId.Key);
 
+                    var appResp = await appMgr.GetApplication(entApiKey, appId.Key);
+
+                    var app = appResp.Model;
+
                     lock (activeApp)
-                        State.DAFApplications.AddRange(dafApps.Model ?? new List<DAFApplicationConfiguration>());
+                        State.DAFApplications.AddRange((dafApps.Model ?? new List<DAFApplicationConfiguration>()).Select(dafApp =>
+                        {
+                            var lookup = dafApp.Lookup.IsNullOrEmpty() ? "" : $" {dafApp.Lookup}";
+
+                            return new DataDAFAppDetails()
+                            {
+                                Description = app.Description,
+                                ID = dafApp.ID,
+                                Name = $"{app.Name}{lookup}",
+                                Priority = app.Priority,
+                                Path = app.PathRegex.Replace("*", "")
+                            };
+                        }));
                 });
             }
         }
@@ -180,6 +196,16 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             // await LoadDAFAppOptions(appMgr, entApiKey);
 
             await LoadAppView(appMgr, entApiKey);
+        }
+
+        public virtual async Task SetActiveDAFApp(string dafAppId)
+        {
+            State.ActiveDAFApp = dafAppId;
+        }
+
+        public virtual async Task SetApplicationTab(int appTab)
+        {
+            State.CurrentApplicationTab = appTab;
         }
         #endregion
 
