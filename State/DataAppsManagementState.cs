@@ -31,7 +31,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual string ActiveAppPathGroup { get; set; }
         
         [DataMember]
-        public virtual string ActiveDAFApp { get; set; }
+        public virtual Guid? ActiveDAFAppID { get; set; }
         
         [DataMember]
         public virtual List<DataAppDetails> Applications { get; set; }

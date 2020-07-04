@@ -23,7 +23,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.DataApps
     public class SetActiveDAFAppRequest
     {
         [DataMember]
-        public virtual string DAFAppID { get; set; }
+        public virtual Guid? DAFAppID { get; set; }
     }
 
     public class SetActiveDAFApp

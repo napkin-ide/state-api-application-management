@@ -167,6 +167,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                         }));
                 });
             }
+
+            await SetActiveDAFApp(State.DAFApplications.FirstOrDefault(da => da.ID == State.ActiveDAFAppID)?.ID);
         }
 
         public virtual async Task LoadDAFAppOptions(ApplicationManagerClient appMgr, string entApiKey)
@@ -198,9 +200,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             await LoadAppView(appMgr, entApiKey);
         }
 
-        public virtual async Task SetActiveDAFApp(string dafAppId)
+        public virtual async Task SetActiveDAFApp(Guid? dafAppId)
         {
-            State.ActiveDAFApp = dafAppId;
+            State.ActiveDAFAppID = dafAppId;
         }
 
         public virtual async Task SetApplicationTab(int appTab)
