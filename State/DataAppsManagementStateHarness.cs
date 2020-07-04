@@ -23,6 +23,7 @@ using LCU.Personas.Enterprises;
 using LCU.Personas.Client.Applications;
 using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Identity;
+using Newtonsoft.Json.Linq;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
@@ -156,8 +157,26 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                         {
                             var lookup = dafApp.Lookup.IsNullOrEmpty() ? "" : $" {dafApp.Lookup}";
 
+                            DataDAFAppTypes? dafAppType;
+                            var dafConfig = loadDafConfig(dafApp, out dafAppType);
+
+                            var dafAppStatus = new DataDAFAppStatus()
+                            {
+                                Name = "Public",
+                                AppCount = 1,
+                                Code = Status.Success.Code,
+                                Message = "All applications are running well.",
+                                Icon = new LCUIcon()
+                                {
+                                    Icon = app.IsPrivate ? "security" : "public"
+                                }
+                            };
+
                             return new DataDAFAppDetails()
                             {
+                                AppStatus = dafAppStatus,
+                                Config = dafConfig,
+                                DAFAppType = dafAppType,
                                 Description = app.Description,
                                 ID = dafApp.ID,
                                 Name = $"{app.Name}{lookup}",
@@ -193,6 +212,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         {
             State.ActiveAppPathGroup = appPathGroup;
 
+            // State.CurrentApplicationTab = 0;
+
             await LoadDAFApplications(appMgr, entApiKey);
 
             // await LoadDAFAppOptions(appMgr, entApiKey);
@@ -212,11 +233,11 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         #endregion
 
         #region Helpers
-        protected virtual async Task<List<DAFAppStatus>> calculateAppStati(string name, List<Application> apps)
+        protected virtual async Task<List<DataDAFAppStatus>> calculateAppStati(string name, List<Application> apps)
         {
-            var appStati = new List<DAFAppStatus>();
+            var appStati = new List<DataDAFAppStatus>();
 
-            appStati.Add(new DAFAppStatus()
+            appStati.Add(new DataDAFAppStatus()
             {
                 Name = "Public",
                 AppCount = apps.Where(app => !app.IsPrivate).Count(),
@@ -228,7 +249,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 }
             });
 
-            appStati.Add(new DAFAppStatus()
+            appStati.Add(new DataDAFAppStatus()
             {
                 Name = "Secure",
                 AppCount = apps.Where(app => app.IsPrivate).Count(),
@@ -241,6 +262,58 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             });
 
             return appStati;
+        }
+
+        protected virtual MetadataModel loadDafConfig(DAFApplicationConfiguration dafApp, out DataDAFAppTypes? dafAppType)
+        {
+            if (dafApp.Metadata.ContainsKey("APIRoot"))
+            {
+                dafAppType = DataDAFAppTypes.API;
+
+                return new Dictionary<string, JToken>()
+                {
+                    { "APIRoot", dafApp.Metadata["APIRoot"] },
+                    { "InboundPath", dafApp.Metadata["InboundPath"] },
+                    { "Methods", dafApp.Metadata["Methods"] },
+                    { "Security", dafApp.Metadata["Security"] }
+                }.JSONConvert<MetadataModel>();
+            }
+            else if (dafApp.Metadata.ContainsKey("Redirect"))
+            {
+                dafAppType = DataDAFAppTypes.Redirect;
+
+                return new Dictionary<string, JToken>()
+                {
+                    { "Redirect", dafApp.Metadata["Redirect"] }
+                }.JSONConvert<MetadataModel>();
+            }
+            else if (dafApp.Metadata.ContainsKey("BaseHref"))
+            {
+                dafAppType = DataDAFAppTypes.View;
+
+                return new Dictionary<string, JToken>()
+                {
+                    { "BaseHref", dafApp.Metadata["BaseHref"] },
+                    { "NPMPackage", dafApp.Metadata["NPMPackage"] },
+                    { "PackageVersion", dafApp.Metadata["PackageVersion"] }
+                }.JSONConvert<MetadataModel>();
+            }
+            else if (dafApp.Metadata.ContainsKey("DAFApplicationID"))
+            {
+                dafAppType = DataDAFAppTypes.DAFAppPointer;
+
+                return new Dictionary<string, JToken>()
+                {
+                    { "DAFApplicationID", dafApp.Metadata["DAFApplicationID"] },
+                    { "DAFApplicationRoot", dafApp.Metadata["DAFApplicationRoot"] }
+                }.JSONConvert<MetadataModel>();
+            }
+            else
+            {
+                dafAppType = null;
+
+                return null;
+            }
         }
         #endregion
     }

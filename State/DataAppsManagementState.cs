@@ -29,71 +29,97 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [DataMember]
         public virtual string ActiveAppPathGroup { get; set; }
-        
+
         [DataMember]
         public virtual Guid? ActiveDAFAppID { get; set; }
-        
+
         [DataMember]
         public virtual List<DataAppDetails> Applications { get; set; }
-        
+
         [DataMember]
         public virtual int CurrentApplicationTab { get; set; }
-        
+
         [DataMember]
         public virtual List<DataDAFAppDetails> DAFApplications { get; set; }
-        
+
         [DataMember]
         public Dictionary<string, string> DAFAppOptions { get; set; }
 
         [DataMember]
         public virtual bool Loading { get; set; }
     }
-    
+
     [Serializable]
     [DataContract]
     public class DataAppDetails
     {
         [DataMember]
         public virtual Dictionary<Guid, string> AppIDs { get; set; }
-        
+
         [DataMember]
-        public virtual List<DAFAppStatus> AppStati { get; set; }
-        
+        public virtual List<DataDAFAppStatus> AppStati { get; set; }
+
         [DataMember]
         public virtual string PathGroup { get; set; }
     }
-    
+
     [Serializable]
     [DataContract]
     public class DataDAFAppDetails
     {
         [DataMember]
+        public virtual DataDAFAppStatus AppStatus { get; set; }
+
+        [DataMember]
+        public virtual MetadataModel Config { get; set; }
+
+        [DataMember]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public virtual DataDAFAppTypes? DAFAppType { get; set; }
+
+        [DataMember]
         public virtual string Description { get; set; }
-        
+
         [DataMember]
         public virtual Guid ID { get; set; }
-        
+
         [DataMember]
         public virtual string Name { get; set; }
-        
+
         [DataMember]
         public virtual string Path { get; set; }
-        
+
         [DataMember]
         public virtual int Priority { get; set; }
     }
-    
+
     [Serializable]
     [DataContract]
-    public class DAFAppStatus : Status
+    public class DataDAFAppStatus : Status
     {
         [DataMember]
         public virtual int AppCount { get; set; }
-        
+
         [DataMember]
         public virtual LCUIcon Icon { get; set; }
-        
+
         [DataMember]
         public virtual string Name { get; set; }
+    }
+
+    [DataContract]
+    public enum DataDAFAppTypes
+    {
+        [EnumMember]
+        View,
+
+        [EnumMember]
+        API,
+
+        [EnumMember]
+        Redirect,
+
+        [EnumMember]
+        DAFAppPointer
     }
 }
