@@ -71,7 +71,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual DataDAFAppStatus AppStatus { get; set; }
 
         [DataMember]
-        public virtual MetadataModel Config { get; set; }
+        public virtual IDictionary<string, MetadataModel> Configs { get; set; }
 
         [DataMember]
         [JsonConverter(typeof(StringEnumConverter))]
