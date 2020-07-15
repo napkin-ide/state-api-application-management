@@ -219,6 +219,62 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             }
         }
 
+        public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey,
+            string host, DataDAFAppDetails dafAppDetails)
+        {
+            var appRes = await appMgr.GetApplication(entApiKey, dafAppDetails.ID);
+
+            Application app;
+
+            if (!appRes.Status || appRes.Model == null)
+                app = new Application();
+            else
+                app = appRes.Model;
+
+            app.Name = dafAppDetails.Name;
+
+            app.Description = dafAppDetails.Description;
+
+            app.PathRegex = $"{dafAppDetails.Path.TrimEnd('/')}*";
+
+            app.Name = dafAppDetails.Name;
+
+            appRes = await appDev.SaveApp(app, host, "lcu-data-apps", entApiKey);
+
+            var dafAppsRes = await appMgr.ListDAFApplications(entApiKey, appRes.Model.ID);
+
+            var dafApps = dafAppsRes.Model ?? new List<DAFApplicationConfiguration>();
+
+            await dafAppDetails.Configs.Each(async dafAppConfig =>
+            {
+                var dafApp = dafApps.FirstOrDefault(da => da.Lookup == dafAppConfig.Key);
+
+                if (dafApp == null)
+                {
+                    dafApps.Add(new DAFApplicationConfiguration()
+                    {
+                        ApplicationID = appRes.Model.ID,
+                        Lookup = dafAppConfig.Key,
+                        Metadata = dafAppConfig.Value.Metadata,
+                        Priority = 500
+                    });
+                }
+                else
+                    dafApp.Metadata = dafAppConfig.Value.Metadata;
+            });
+
+            var cfgsToRemove = dafApps.Where(da => dafAppDetails.Configs.All(cfg => cfg.Key != da.Lookup)).ToList();
+
+            await cfgsToRemove.Each(async cfgToRemove =>
+            {
+                await appDev.RemoveDAFApp(appRes.Model.ID, cfgToRemove.ID, entApiKey);
+            });
+
+            var saveRes = await appDev.SaveDAFApps(dafApps, appRes.Model.ID, entApiKey);
+
+            await LoadApplications(appMgr, entApiKey);
+        }
+
         public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entApiKey, string appPathGroup)
         {
             State.ActiveAppPathGroup = appPathGroup;
