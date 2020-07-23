@@ -88,6 +88,16 @@
       "command": "func host start",
       "isBackground": true,
       "problemMatcher": "$func-watch"
+    },
+    {
+      "label": "run all tests",
+      "command": "dotnet test",      
+      "options": {
+        "cwd": "${workspaceFolder}/${workspaceFolderBasename}-tests",        
+      },   
+      "type": "shell",      
+      "group": "test",    
+      "problemMatcher": []
     }   
   ]
 }
