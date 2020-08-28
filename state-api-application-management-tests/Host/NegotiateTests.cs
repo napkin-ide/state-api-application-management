@@ -22,7 +22,7 @@ namespace state_api_application_management_tests
         [TestMethod]
         public async Task TestNegotiate()
         {
-            LcuEntApiKey = "";            
+            LcuentLookup = "";            
             PrincipalId = "";
 
             addRequestHeaders();
