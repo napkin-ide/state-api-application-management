@@ -12,41 +12,42 @@ using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Applications;
 using Fathym;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Azure.Storage.Blob;
 using LCU.StateAPI.Utilities;
+using LCU.State.API.NapkinIDE.ApplicationManagement.State;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.Applications
 {
     [Serializable]
     [DataContract]
-    public class SetActiveDAFAPIAppRequest
+    public class SetActiveAppRequest
     {
         [DataMember]
-        public virtual Guid DAFAPIAppID { get; set; }
+        public virtual Application App { get; set; }
     }
 
-    public class SetActiveDAFAPIApp
+    public class SetActiveApp
     {
         protected ApplicationManagerClient appMgr;
 
-        public SetActiveDAFAPIApp(ApplicationManagerClient appMgr)
+        public SetActiveApp(ApplicationManagerClient appMgr)
         {
             this.appMgr = appMgr;
         }
 
-        [FunctionName("SetActiveDAFAPIApp")]
+        [FunctionName("SetActiveApp")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
-            [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
+            [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<ApplicationManagementState, SetActiveDAFAPIAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
+            return await stateBlob.WithStateHarness<ApplicationManagementState, SetActiveAppRequest, ApplicationManagementStateHarness>(req, signalRMessages, log,
                 async (harness, reqData, actReq) =>
             {
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                log.LogInformation($"Setting Active DAF API App: {reqData.DAFAPIAppID}");
+                log.LogInformation($"Setting Active App: {reqData.App.Name}");
 
-                await harness.SetActiveDAFAPIApp(reqData.DAFAPIAppID);
+                await harness.SetActiveApp(appMgr, stateDetails.EnterpriseLookup, reqData.App);
 
                 return Status.Success;
             });

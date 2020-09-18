@@ -18,7 +18,7 @@ using System.Runtime.Serialization;
 using System.Collections.Generic;
 using LCU.Graphs.Registry.Enterprises.Apps;
 
-namespace LCU.State.API.NapkinIDE.ApplicationManagement
+namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
     [Serializable]
     [DataContract]
@@ -35,10 +35,10 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement
         public virtual Application ActiveApp { get; set; }
 
         [DataMember]
-        public List<DAFAPIConfiguration> ActiveDAFAPIs { get; set; }
+        public List<DAFApplication> ActiveDAFAPIs { get; set; }
 
         [DataMember]
-        public virtual DAFApplicationConfiguration ActiveDAFApp { get; set; }
+        public virtual DAFApplication ActiveDAFApp { get; set; }
 
         [DataMember]
         public virtual bool AddingApp { get; set; }
