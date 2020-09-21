@@ -81,6 +81,31 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 };
             }).ToList();
 
+            var apiAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/api") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/api",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            var lcuAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/_lcu") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/_lcu",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            var homeAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            State.FixedApplications = new List<DataAppDetails>() { apiAppDets, lcuAppDets, homeAppDets };
+
+            State.Applications = State.Applications.Where(app => !State.FixedApplications.Contains(app)).ToList();
+
             await SetActiveApp(appMgr, entLookup,
                 State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup)?.PathGroup);
         }

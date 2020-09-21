@@ -46,6 +46,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public Dictionary<string, string> DAFAppOptions { get; set; }
 
         [DataMember]
+        public virtual List<DataAppDetails> FixedApplications { get; set; }
+
+        [DataMember]
         public virtual bool Loading { get; set; }
     }
 
