@@ -24,6 +24,7 @@ using LCU.Personas.Client.Applications;
 using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Identity;
 using Newtonsoft.Json.Linq;
+using LCU.Personas.Applications;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
@@ -79,6 +80,31 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     AppStati = calculateAppStati(appGroup.Key, appGroup.ToList()).Result
                 };
             }).ToList();
+
+            var apiAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/api") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/api",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            var lcuAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/_lcu") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/_lcu",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            var homeAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            State.FixedApplications = new List<DataAppDetails>() { apiAppDets, lcuAppDets, homeAppDets };
+
+            State.Applications = State.Applications.Where(app => !State.FixedApplications.Contains(app)).ToList();
 
             await SetActiveApp(appMgr, entLookup,
                 State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup)?.PathGroup);
@@ -219,6 +245,30 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             }
         }
 
+        public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey,
+            string host, DataDAFAppDetails dafAppDetails)
+        {
+            var saveRes = await appDev.SaveAppAndDAFApps(new SaveAppAndDAFAppsRequest()
+            {
+                Application = new Application()
+                {
+                    Name = dafAppDetails.Name,
+                    Description = dafAppDetails.Description,
+                    PathRegex = $"{dafAppDetails.Path.TrimEnd('/')}*"
+                },
+                DAFApps = dafAppDetails.Configs.Select(dafAppConfig =>
+                {
+                    return new DAFApplication()
+                    {
+                        Lookup = dafAppConfig.Key,
+                        Details = dafAppConfig.Value,
+                        Priority = 500
+                    };
+                }).ToList()
+            }, entApiKey, host);
+
+            await LoadApplications(appMgr, entApiKey);
+        }
         public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entLookup, string appPathGroup)
         {
             State.ActiveAppPathGroup = appPathGroup;
