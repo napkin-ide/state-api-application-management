@@ -76,6 +76,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 return new DataAppDetails()
                 {
                     AppIDs = appGroup.ToDictionary(ag => ag.ID, ag => ag.PathRegex.Replace("*", "")),
+                    DisplayName = appGroup.Key,
                     PathGroup = appGroup.Key,
                     AppStati = calculateAppStati(appGroup.Key, appGroup.ToList()).Result
                 };
@@ -84,6 +85,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             var apiAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/api") ?? new DataAppDetails()
             {
                 AppIDs = new Dictionary<Guid, string>(),
+                DisplayName = "API Management",
                 PathGroup = "/api",
                 AppStati = new List<DataDAFAppStatus>()
             };
@@ -91,6 +93,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             var lcuAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/_lcu") ?? new DataAppDetails()
             {
                 AppIDs = new Dictionary<Guid, string>(),
+                DisplayName = "Low Code Units",
                 PathGroup = "/_lcu",
                 AppStati = new List<DataDAFAppStatus>()
             };
@@ -98,6 +101,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             var homeAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/") ?? new DataAppDetails()
             {
                 AppIDs = new Dictionary<Guid, string>(),
+                DisplayName = "Home Page Routing",
                 PathGroup = "/",
                 AppStati = new List<DataDAFAppStatus>()
             };
