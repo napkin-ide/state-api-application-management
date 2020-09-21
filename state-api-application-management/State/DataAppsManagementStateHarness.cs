@@ -107,7 +107,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 AppStati = new List<DataDAFAppStatus>()
             };
 
-            homeAppDets.DisplayName = "Home Page Routing";
+            homeAppDets.DisplayName = "Home Pages";
 
             State.FixedApplications = new List<DataAppDetails>() { apiAppDets, lcuAppDets, homeAppDets };
 
