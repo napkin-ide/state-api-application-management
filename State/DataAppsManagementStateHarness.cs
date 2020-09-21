@@ -219,30 +219,6 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             }
         }
 
-        public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entApiKey,
-            string host, DataDAFAppDetails dafAppDetails)
-        {
-            var saveRes = await appDev.SaveAppAndDAFApps(new SaveAppAndDAFAppsRequest()
-            {
-                Application = new Application()
-                {
-                    Name = dafAppDetails.Name,
-                    Description = dafAppDetails.Description,
-                    PathRegex = $"{dafAppDetails.Path.TrimEnd('/')}*"
-                },
-                dafApps = dafAppDetails.Configs.Select(dafAppConfig =>
-                {
-                    return new DAFApplicationConfiguration()
-                    {
-                        Lookup = dafAppConfig.Key,
-                        Metadata = dafAppConfig.Value.Metadata,
-                        Priority = 500
-                    };
-                }).ToList()
-            }, entApiKey, host);
-
-            await LoadApplications(appMgr, entApiKey);
-        }
         public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entLookup, string appPathGroup)
         {
             State.ActiveAppPathGroup = appPathGroup;
@@ -301,46 +277,46 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         protected virtual MetadataModel loadDafConfig(DAFApplication dafApp, out DataDAFAppTypes? dafAppType)
         {
-            if (dafApp.Details.Metadata.ContainsKey("APIRoot"))
+            if (dafApp.Metadata.ContainsKey("APIRoot"))
             {
                 dafAppType = DataDAFAppTypes.API;
 
                 return new Dictionary<string, JToken>()
                 {
-                    { "APIRoot", dafApp.Details.Metadata["APIRoot"] },
-                    { "InboundPath", dafApp.Details.Metadata["InboundPath"] },
-                    { "Methods", dafApp.Details.Metadata["Methods"] },
-                    { "Security", dafApp.Details.Metadata["Security"] }
+                    { "APIRoot", dafApp.Metadata["APIRoot"] },
+                    { "InboundPath", dafApp.Metadata["InboundPath"] },
+                    { "Methods", dafApp.Metadata["Methods"] },
+                    { "Security", dafApp.Metadata["Security"] }
                 }.JSONConvert<MetadataModel>();
             }
-            else if (dafApp.Details.Metadata.ContainsKey("Redirect"))
+            else if (dafApp.Metadata.ContainsKey("Redirect"))
             {
                 dafAppType = DataDAFAppTypes.Redirect;
 
                 return new Dictionary<string, JToken>()
                 {
-                    { "Redirect", dafApp.Details.Metadata["Redirect"] }
+                    { "Redirect", dafApp.Metadata["Redirect"] }
                 }.JSONConvert<MetadataModel>();
             }
-            else if (dafApp.Details.Metadata.ContainsKey("BaseHref"))
+            else if (dafApp.Metadata.ContainsKey("BaseHref"))
             {
                 dafAppType = DataDAFAppTypes.View;
 
                 return new Dictionary<string, JToken>()
                 {
-                    { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
-                    { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
-                    { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] }
+                    { "BaseHref", dafApp.Metadata["BaseHref"] },
+                    { "NPMPackage", dafApp.Metadata["NPMPackage"] },
+                    { "PackageVersion", dafApp.Metadata["PackageVersion"] }
                 }.JSONConvert<MetadataModel>();
             }
-            else if (dafApp.Details.Metadata.ContainsKey("DAFApplicationID"))
+            else if (dafApp.Metadata.ContainsKey("DAFApplicationID"))
             {
                 dafAppType = DataDAFAppTypes.DAFAppPointer;
 
                 return new Dictionary<string, JToken>()
                 {
-                    { "DAFApplicationID", dafApp.Details.Metadata["DAFApplicationID"] },
-                    { "DAFApplicationRoot", dafApp.Details.Metadata["DAFApplicationRoot"] }
+                    { "DAFApplicationID", dafApp.Metadata["DAFApplicationID"] },
+                    { "DAFApplicationRoot", dafApp.Metadata["DAFApplicationRoot"] }
                 }.JSONConvert<MetadataModel>();
             }
             else
