@@ -24,6 +24,7 @@ using LCU.Personas.Client.Applications;
 using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Identity;
 using Newtonsoft.Json.Linq;
+using LCU.Personas.Applications;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
@@ -230,12 +231,12 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     Description = dafAppDetails.Description,
                     PathRegex = $"{dafAppDetails.Path.TrimEnd('/')}*"
                 },
-                dafApps = dafAppDetails.Configs.Select(dafAppConfig =>
+                DAFApps = dafAppDetails.Configs.Select(dafAppConfig =>
                 {
-                    return new DAFApplicationConfiguration()
+                    return new DAFApplication()
                     {
                         Lookup = dafAppConfig.Key,
-                        Metadata = dafAppConfig.Value.Metadata,
+                        Details = dafAppConfig.Value,
                         Priority = 500
                     };
                 }).ToList()

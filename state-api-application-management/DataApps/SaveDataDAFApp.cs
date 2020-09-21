@@ -12,7 +12,7 @@ using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Applications;
 using Fathym;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Azure.Storage.Blob;
 using LCU.StateAPI.Utilities;
 using LCU.State.API.NapkinIDE.ApplicationManagement.State;
 
@@ -42,7 +42,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.DataApps
         [FunctionName("SaveDataDAFApp")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = ApplicationManagementState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
-            [Blob("state-api/{headers.lcu-ent-api-key}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
+            [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
             return await stateBlob.WithStateHarness<DataAppsManagementState, SaveDataDAFAppRequest, DataAppsManagementStateHarness>(req, signalRMessages, log,
                 async (harness, reqData, actReq) =>
@@ -51,7 +51,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.DataApps
 
                 log.LogInformation($"Saving Data DAF App: {reqData.DAFApp.ID}");
 
-                await harness.SaveDAFApp(appDev, appMgr, stateDetails.EnterpriseAPIKey, stateDetails.Host, reqData.DAFApp);
+                await harness.SaveDAFApp(appDev, appMgr, stateDetails.EnterpriseLookup, stateDetails.Host, reqData.DAFApp);
 
                 return Status.Success;
             });
