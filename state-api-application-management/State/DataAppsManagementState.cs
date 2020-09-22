@@ -63,6 +63,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual List<DataDAFAppStatus> AppStati { get; set; }
 
         [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
         public virtual string DisplayName { get; set; }
 
         [DataMember]
