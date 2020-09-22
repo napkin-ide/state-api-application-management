@@ -91,6 +91,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
             apiAppDets.DisplayName = "API Management";
 
+            apiAppDets.Description = "Manage your API proxies, to gain control over usage and security.";
+
             var lcuAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/_lcu") ?? new DataAppDetails()
             {
                 AppIDs = new Dictionary<Guid, string>(),
@@ -100,14 +102,18 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
             lcuAppDets.DisplayName = "Low Code Units";
 
+            lcuAppDets.Description = "Reusable components for your IDE and more...";
+
             var homeAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/") ?? new DataAppDetails()
             {
                 AppIDs = new Dictionary<Guid, string>(),
                 PathGroup = "/",
                 AppStati = new List<DataDAFAppStatus>()
             };
-
+            
             homeAppDets.DisplayName = "Home Pages";
+
+            homeAppDets.Description = "Manage home page applications, redirects and more";
 
             State.FixedApplications = new List<DataAppDetails>() { apiAppDets, lcuAppDets, homeAppDets };
 
