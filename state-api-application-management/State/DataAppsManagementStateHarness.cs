@@ -224,7 +224,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                             Name = $"{app.Name}",
                             Priority = app.Priority,
                             Path = app.PathRegex.Replace("*", ""),
-                            Security = new DataDAFAppSecurityDetails()
+                            Security = new DataAppSecurityDetails()
                             {
                                 AccessRights = app.AccessRights,
                                 IsPrivate = app.IsPrivate,
