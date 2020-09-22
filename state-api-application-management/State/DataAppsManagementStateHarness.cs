@@ -76,9 +76,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 return new DataAppDetails()
                 {
                     AppIDs = appGroup.ToDictionary(ag => ag.ID, ag => ag.PathRegex.Replace("*", "")),
+                    AppStati = calculateAppStati(appGroup.Key, appGroup.ToList()).Result,
                     DisplayName = appGroup.Key,
-                    PathGroup = appGroup.Key,
-                    AppStati = calculateAppStati(appGroup.Key, appGroup.ToList()).Result
+                    PathGroup = appGroup.Key
                 };
             }).ToList();
 
@@ -110,7 +110,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 PathGroup = "/",
                 AppStati = new List<DataDAFAppStatus>()
             };
-            
+
             homeAppDets.DisplayName = "Home Pages";
 
             homeAppDets.Description = "Manage home page applications, redirects and more";
@@ -223,7 +223,13 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                             ID = app.ID,
                             Name = $"{app.Name}",
                             Priority = app.Priority,
-                            Path = app.PathRegex.Replace("*", "")
+                            Path = app.PathRegex.Replace("*", ""),
+                            Security = new DataDAFAppSecurityDetails()
+                            {
+                                AccessRights = app.AccessRights,
+                                IsPrivate = app.IsPrivate,
+                                Licenses = app.Licenses
+                            }
                         };
 
                         lock (activeApp)
