@@ -100,6 +100,23 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [DataMember]
         public virtual int Priority { get; set; }
+
+        [DataMember]
+        public virtual DataDAFAppSecurityDetails Security { get; set; }
+    }
+
+    [Serializable]
+    [DataContract]
+    public class DataDAFAppSecurityDetails
+    {
+        [DataMember]
+        public virtual string[] AccessRights { get; set; }
+        
+        [DataMember]
+        public virtual bool IsPrivate { get; set; }
+        
+        [DataMember]
+        public virtual string[] Licenses { get; set; }
     }
 
     [Serializable]
