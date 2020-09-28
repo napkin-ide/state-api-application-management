@@ -102,12 +102,12 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual int Priority { get; set; }
 
         [DataMember]
-        public virtual DataDAFAppSecurityDetails Security { get; set; }
+        public virtual DataAppSecurityDetails Security { get; set; }
     }
 
     [Serializable]
     [DataContract]
-    public class DataDAFAppSecurityDetails
+    public class DataAppSecurityDetails
     {
         [DataMember]
         public virtual string[] AccessRights { get; set; }
