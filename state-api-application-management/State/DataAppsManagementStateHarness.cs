@@ -269,7 +269,10 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     ID = dafAppDetails.ID,
                     Name = dafAppDetails.Name,
                     Description = dafAppDetails.Description,
-                    PathRegex = $"{dafAppDetails.Path.TrimEnd('/')}*"
+                    PathRegex = $"{dafAppDetails.Path.TrimEnd('/')}*",
+                    AccessRights = dafAppDetails.Security.AccessRights,
+                    Licenses = dafAppDetails.Security.Licenses,
+                    IsPrivate = dafAppDetails.Security.IsPrivate
                 },
                 DAFApps = dafAppDetails.Configs.Select(dafAppConfig =>
                 {
