@@ -425,10 +425,10 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     return new Dictionary<string, JToken>()
                     {
                         { "Lookup", dafApp.Details.Metadata.ContainsKey("Lookup") ? dafApp.Details.Metadata["Lookup"] : "" },
-                        { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
+                        { "BaseHref", dafApp.Details.Metadata.ContainsKey("BaseHref") ? dafApp.Details.Metadata["BaseHref"] : "" },
                         { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
                         { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] },
-                        { "StateConfig", dafApp.Details.Metadata["StateConfig"] }
+                        { "StateConfig", dafApp.Details.Metadata.ContainsKey("StateConfig") ? dafApp.Details.Metadata["StateConfig"] : "" }
                     }.JSONConvert<MetadataModel>();
                 }
                 else
