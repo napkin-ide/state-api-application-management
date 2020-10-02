@@ -416,16 +416,33 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     { "Redirect", dafApp.Details.Metadata["Redirect"] }
                 }.JSONConvert<MetadataModel>();
             }
-            else if (dafApp.Details.Metadata.ContainsKey("BaseHref"))
+            else if (dafApp.Details.Metadata.ContainsKey("BaseHref") && dafApp.Details.Metadata.ContainsKey("NPMPackage"))
             {
-                dafAppType = DataDAFAppTypes.View;
-
-                return new Dictionary<string, JToken>()
+                if (dafApp.Details.Metadata["BaseHref"].ToString().StartsWith("/_lcu/"))
                 {
-                    { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
-                    { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
-                    { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] }
-                }.JSONConvert<MetadataModel>();
+                    dafAppType = DataDAFAppTypes.LCU;
+
+                    return new Dictionary<string, JToken>()
+                    {
+                        { "Lookup", dafApp.Details.Metadata.ContainsKey("Lookup") ? dafApp.Details.Metadata["Lookup"] : "" },
+                        { "BaseHref", dafApp.Details.Metadata.ContainsKey("BaseHref") ? dafApp.Details.Metadata["BaseHref"] : "" },
+                        { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
+                        { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] },
+                        { "StateConfig", dafApp.Details.Metadata.ContainsKey("StateConfig") ? dafApp.Details.Metadata["StateConfig"] : "" }
+                    }.JSONConvert<MetadataModel>();
+                }
+                else
+                {
+                    dafAppType = DataDAFAppTypes.View;
+
+                    return new Dictionary<string, JToken>()
+                    {
+                        { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
+                        { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
+                        { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] },
+                        { "StateConfig", dafApp.Details.Metadata["StateConfig"] }
+                    }.JSONConvert<MetadataModel>();
+                }
             }
             else if (dafApp.Details.Metadata.ContainsKey("DAFApplicationID"))
             {
