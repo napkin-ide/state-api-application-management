@@ -25,6 +25,7 @@ using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Identity;
 using Newtonsoft.Json.Linq;
 using LCU.Personas.Applications;
+using System.Text.RegularExpressions;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
@@ -73,15 +74,6 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 await appDev.RemoveApp(appId, entLookup);
 
             await LoadApplications(appMgr, entLookup);
-        }
-
-        public virtual async Task Ensure(ApplicationManagerClient appMgr, IdentityManagerClient idMgr, string entLookup)
-        {
-            await LoadAccessRightOptions(idMgr, entLookup);
-
-            await LoadApplications(appMgr, entLookup);
-
-            await LoadDAFAppOptions(appMgr, entLookup);
         }
 
         public virtual async Task LoadAccessRightOptions(IdentityManagerClient idMgr, string entLookup)
@@ -259,6 +251,45 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             // }
         }
 
+        public virtual async Task Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr, string entLookup)
+        {
+            await LoadAccessRightOptions(idMgr, entLookup);
+
+            await LoadApplications(appMgr, entLookup);
+
+            await LoadDAFAppOptions(appMgr, entLookup);
+
+            await RefreshZipOptions(appMgr, entMgr, entLookup);
+        }
+
+        public virtual async Task RefreshZipOptions(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, string entLookup)
+        {
+            State.ZipAppOptions = new List<ZipAppOption>();
+
+            var entRes = await entMgr.GetEnterprise(entLookup);
+
+            if (entRes.Status)
+            {
+                // var listRes = await appMgr.Get<ListFilesResponse>($"dfs/list/{entRes.Model.ID}/app-uploads/application/zip");
+
+                var listRes = await appMgr.ListFiles(entRes.Model.ID, $"app-uploads/application/zip");
+
+                if (listRes.Status)
+                {
+                    State.ZipAppOptions = listRes.Files.Select(file =>
+                    {
+                        return new ZipAppOption()
+                        {
+                            DisplayName = file,
+                            File = file
+                        };
+                    }).ToList();
+                }
+            }
+
+            State.ZipLoading = false;
+        }
+
         public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entLookup,
             string host, DataDAFAppDetails dafAppDetails)
         {
@@ -310,6 +341,38 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual async Task SetApplicationTab(int appTab)
         {
             State.CurrentApplicationTab = appTab;
+        }
+
+        public virtual async Task UploadZips(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, string entLookup,
+            List<ZipAppOption> zipApps)
+        {
+            var regex = new Regex("^data:(?<type>.*);base64,(?<data>.*)$");
+
+            var stati = new List<Status>();
+
+            await zipApps.Each(async zipApp =>
+            {
+                var match = regex.Match(zipApp.Data);
+
+                var dataType = match.Groups["type"].Value;
+
+                var base64Data = match.Groups["data"].Value;
+
+                var data = Convert.FromBase64String(base64Data);
+
+                var entRes = await entMgr.GetEnterprise(entLookup);
+
+                if (entRes.Status)
+                {
+                    var saveRes = await appMgr.SaveFile(data, entRes.Model.ID, "", zipApp.File, null, $"app-uploads/{dataType}");
+
+                    stati.Add(saveRes.Status);
+                }
+                else
+                    stati.Add(entRes.Status);
+            });
+
+            await RefreshZipOptions(appMgr, entMgr, entLookup);
         }
         #endregion
 
@@ -444,6 +507,17 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                         { "StateConfig", dafApp.Details.Metadata["StateConfig"] }
                     }.JSONConvert<MetadataModel>();
                 }
+            }
+            else if (dafApp.Details.Metadata.ContainsKey("BaseHref") && dafApp.Details.Metadata.ContainsKey("ZipFile"))
+            {
+                dafAppType = DataDAFAppTypes.ViewZip;
+
+                return new Dictionary<string, JToken>()
+                {
+                    { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
+                    { "ZipFile", dafApp.Details.Metadata["ZipFile"] },
+                    { "StateConfig", dafApp.Details.Metadata["StateConfig"] }
+                }.JSONConvert<MetadataModel>();
             }
             else if (dafApp.Details.Metadata.ContainsKey("DAFApplicationID"))
             {
