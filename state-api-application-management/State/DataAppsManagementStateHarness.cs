@@ -24,6 +24,7 @@ using LCU.Personas.Client.Applications;
 using LCU.Graphs.Registry.Enterprises.Apps;
 using LCU.Personas.Client.Identity;
 using Newtonsoft.Json.Linq;
+using LCU.Personas.Applications;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
@@ -33,6 +34,17 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         #endregion
 
         #region Properties 
+        public virtual List<DataAppDetails> AllApplications
+        {
+            get
+            {
+                var apps = new List<DataAppDetails>(State.Applications);
+
+                apps.AddRange(State.FixedApplications);
+
+                return apps;
+            }
+        }
         #endregion
 
         #region Constructors
@@ -42,11 +54,34 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         #endregion
 
         #region API Methods
+        public virtual async Task DeleteDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entLookup,
+            Guid appId, List<string> lookups)
+        {
+            var dafApps = await appMgr.ListDAFApplications(entLookup, appId);
+
+            await lookups.Each(async lookup =>
+            {
+                var dafApp = dafApps.Model.FirstOrDefault(da => da.Lookup == lookup);
+
+                if (dafApp != null)
+                    await appDev.RemoveDAFApp(appId, dafApp.ID, entLookup);
+            });
+
+            dafApps = await appMgr.ListDAFApplications(entLookup, appId);
+
+            if (dafApps.Status && dafApps.Model.IsNullOrEmpty())
+                await appDev.RemoveApp(appId, entLookup);
+
+            await LoadApplications(appMgr, entLookup);
+        }
+
         public virtual async Task Ensure(ApplicationManagerClient appMgr, IdentityManagerClient idMgr, string entLookup)
         {
             await LoadAccessRightOptions(idMgr, entLookup);
 
             await LoadApplications(appMgr, entLookup);
+
+            await LoadDAFAppOptions(appMgr, entLookup);
         }
 
         public virtual async Task LoadAccessRightOptions(IdentityManagerClient idMgr, string entLookup)
@@ -75,20 +110,58 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 return new DataAppDetails()
                 {
                     AppIDs = appGroup.ToDictionary(ag => ag.ID, ag => ag.PathRegex.Replace("*", "")),
-                    PathGroup = appGroup.Key,
-                    AppStati = calculateAppStati(appGroup.Key, appGroup.ToList()).Result
+                    AppStati = calculateAppStati(appGroup.Key, appGroup.ToList()).Result,
+                    DisplayName = appGroup.Key,
+                    PathGroup = appGroup.Key
                 };
             }).ToList();
 
+            var apiAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/api") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/api",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            apiAppDets.DisplayName = "API Management";
+
+            apiAppDets.Description = "Manage your API proxies, to gain control over usage and security.";
+
+            var lcuAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/_lcu") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/_lcu",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            lcuAppDets.DisplayName = "Low Code Units";
+
+            lcuAppDets.Description = "Reusable components for your IDE and more...";
+
+            var homeAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/") ?? new DataAppDetails()
+            {
+                AppIDs = new Dictionary<Guid, string>(),
+                PathGroup = "/",
+                AppStati = new List<DataDAFAppStatus>()
+            };
+
+            homeAppDets.DisplayName = "Home Pages";
+
+            homeAppDets.Description = "Manage home page applications, redirects and more";
+
+            State.FixedApplications = new List<DataAppDetails>() { apiAppDets, lcuAppDets, homeAppDets };
+
+            State.Applications = State.Applications.Where(app => !State.FixedApplications.Contains(app)).ToList();
+
             await SetActiveApp(appMgr, entLookup,
-                State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup)?.PathGroup);
+                AllApplications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup)?.PathGroup);
         }
 
         public virtual async Task LoadAppView(ApplicationManagerClient appMgr, string entLookup)
         {
             if (State.ActiveAppPathGroup != null)
             {
-                var appDetails = State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
+                var appDetails = AllApplications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
 
                 var dafApps = State.DAFApplications;
 
@@ -140,9 +213,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         {
             State.DAFApplications = new List<DataDAFAppDetails>();
 
-            if (!State.Applications.IsNullOrEmpty() && !State.ActiveAppPathGroup.IsNullOrEmpty())
+            if (!AllApplications.IsNullOrEmpty() && !State.ActiveAppPathGroup.IsNullOrEmpty())
             {
-                var activeApp = State.Applications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
+                var activeApp = AllApplications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
 
                 await activeApp.AppIDs.Each(async appId =>
                 {
@@ -150,42 +223,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
                     if (dafApps.Status)
                     {
-                        var appResp = await appMgr.GetApplication(entLookup, appId.Key);
-
-                        var app = appResp.Model;
-
-                        var dafAppStatus = new DataDAFAppStatus()
-                        {
-                            Name = "Public",
-                            AppCount = dafApps.Model.Count,
-                            Code = Status.Success.Code,
-                            Message = "All applications are running well.",
-                            Icon = new LCUIcon()
-                            {
-                                Icon = app.IsPrivate ? "security" : "public"
-                            }
-                        };
-
-                        DataDAFAppTypes? dafAppType = null;
-                        var configs = (dafApps.Model ?? new List<DAFApplication>()).ToDictionary(dafApp =>
-                        {
-                            return dafApp.Lookup.IsNullOrEmpty() ? "" : $" {dafApp.Lookup}";
-                        }, dafApp =>
-                        {
-                            return loadDafConfig(dafApp, out dafAppType);
-                        });
-
-                        var dafAppDetails = new DataDAFAppDetails()
-                        {
-                            AppStatus = dafAppStatus,
-                            Configs = configs,
-                            DAFAppType = dafAppType,
-                            Description = app.Description,
-                            ID = app.ID,
-                            Name = $"{app.Name}",
-                            Priority = app.Priority,
-                            Path = app.PathRegex.Replace("*", "")
-                        };
+                        var dafAppDetails = await getDetailsFromDAFApp(appMgr, entLookup, appId.Key, dafApps.Model);
 
                         lock (activeApp)
                             State.DAFApplications.Add(dafAppDetails);
@@ -200,23 +238,55 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         {
             State.DAFAppOptions = new Dictionary<string, string>();
 
-            if (!State.Applications.IsNullOrEmpty() && !State.DAFApplications.IsNullOrEmpty() &&
-                State.DAFApplications.Any(dafApp => dafApp.DAFAppType == DataDAFAppTypes.DAFAppPointer))
+            // var allDafApps = await appMgr.ListAllDAFApplications(entLookup);
+
+            // if (!AllApplications.IsNullOrEmpty() && !allDafApps.Model.IsNullOrEmpty() &&
+            //     allDafApps.Model.Any(dafApp => dafApp.DAFAppType == DataDAFAppTypes.DAFAppPointer))
+            // {
+            //     await AllApplications.Each(async app =>
+            //     {
+            //         await app.AppIDs.Each(async appId =>
+            //         {
+            //             var appResp = await appMgr.GetApplication(entLookup, appId.Key);
+
+            //             var app = appResp.Model;
+
+            //             var dafApps = await appMgr.ListDAFApplications(entLookup, appId.Key);
+
+            //             dafApps?.Model.Each(dafApp => State.DAFAppOptions[dafApp.ID.ToString()] = $"{app.Name} {appId.Value} {dafApp.Lookup}");
+            //         });
+            //     });
+            // }
+        }
+
+        public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entLookup,
+            string host, DataDAFAppDetails dafAppDetails)
+        {
+            var saveRes = await appDev.SaveAppAndDAFApps(new SaveAppAndDAFAppsRequest()
             {
-                await State.Applications.Each(async app =>
+                Application = new Application()
                 {
-                    await app.AppIDs.Each(async appId =>
+                    ID = dafAppDetails.ID,
+                    Name = dafAppDetails.Name,
+                    Description = dafAppDetails.Description,
+                    PathRegex = $"{dafAppDetails.Path.TrimEnd('/')}*",
+                    AccessRights = dafAppDetails.Security.AccessRights,
+                    Licenses = dafAppDetails.Security.Licenses,
+                    IsPrivate = dafAppDetails.Security.IsPrivate,
+                    Priority = dafAppDetails.Priority
+                },
+                DAFApps = dafAppDetails.Configs.Select(dafAppConfig =>
+                {
+                    return new DAFApplication()
                     {
-                        var appResp = await appMgr.GetApplication(entLookup, appId.Key);
+                        Lookup = dafAppConfig.Key,
+                        Details = dafAppConfig.Value,
+                        Priority = 500
+                    };
+                }).ToList()
+            }, entLookup, host);
 
-                        var app = appResp.Model;
-
-                        var dafApps = await appMgr.ListDAFApplications(entLookup, appId.Key);
-
-                        dafApps?.Model.Each(dafApp => State.DAFAppOptions[dafApp.ID.ToString()] = $"{app.Name} {appId.Value} {dafApp.Lookup}");
-                    });
-                });
-            }
+            await LoadApplications(appMgr, entLookup);
         }
 
         public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entLookup, string appPathGroup)
@@ -275,6 +345,55 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             return appStati;
         }
 
+        protected virtual async Task<DataDAFAppDetails> getDetailsFromDAFApp(ApplicationManagerClient appMgr, string entLookup, Guid appId,
+            List<DAFApplication> dafApps)
+        {
+            var appResp = await appMgr.GetApplication(entLookup, appId);
+
+            var app = appResp.Model;
+
+            var dafAppStatus = new DataDAFAppStatus()
+            {
+                Name = "Public",
+                AppCount = dafApps.Count,
+                Code = Status.Success.Code,
+                Message = "All applications are running well.",
+                Icon = new LCUIcon()
+                {
+                    Icon = app.IsPrivate ? "security" : "public"
+                }
+            };
+
+            DataDAFAppTypes? dafAppType = null;
+            var configs = (dafApps ?? new List<DAFApplication>()).ToDictionary(dafApp =>
+            {
+                return dafApp.Lookup.IsNullOrEmpty() ? "" : $" {dafApp.Lookup}";
+            }, dafApp =>
+            {
+                return loadDafConfig(dafApp, out dafAppType);
+            });
+
+            var dafAppDetails = new DataDAFAppDetails()
+            {
+                AppStatus = dafAppStatus,
+                Configs = configs,
+                DAFAppType = dafAppType,
+                Description = app.Description,
+                ID = app.ID,
+                Name = $"{app.Name}",
+                Priority = app.Priority,
+                Path = app.PathRegex.Replace("*", ""),
+                Security = new DataAppSecurityDetails()
+                {
+                    AccessRights = app.AccessRights,
+                    IsPrivate = app.IsPrivate,
+                    Licenses = app.Licenses
+                }
+            };
+
+            return dafAppDetails;
+        }
+
         protected virtual MetadataModel loadDafConfig(DAFApplication dafApp, out DataDAFAppTypes? dafAppType)
         {
             if (dafApp.Details.Metadata.ContainsKey("APIRoot"))
@@ -298,16 +417,33 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     { "Redirect", dafApp.Details.Metadata["Redirect"] }
                 }.JSONConvert<MetadataModel>();
             }
-            else if (dafApp.Details.Metadata.ContainsKey("BaseHref"))
+            else if (dafApp.Details.Metadata.ContainsKey("BaseHref") && dafApp.Details.Metadata.ContainsKey("NPMPackage"))
             {
-                dafAppType = DataDAFAppTypes.View;
-
-                return new Dictionary<string, JToken>()
+                if (dafApp.Details.Metadata["BaseHref"].ToString().StartsWith("/_lcu/"))
                 {
-                    { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
-                    { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
-                    { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] }
-                }.JSONConvert<MetadataModel>();
+                    dafAppType = DataDAFAppTypes.LCU;
+
+                    return new Dictionary<string, JToken>()
+                    {
+                        { "Lookup", dafApp.Details.Metadata.ContainsKey("Lookup") ? dafApp.Details.Metadata["Lookup"] : "" },
+                        { "BaseHref", dafApp.Details.Metadata.ContainsKey("BaseHref") ? dafApp.Details.Metadata["BaseHref"] : "" },
+                        { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
+                        { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] },
+                        { "StateConfig", dafApp.Details.Metadata.ContainsKey("StateConfig") ? dafApp.Details.Metadata["StateConfig"] : "" }
+                    }.JSONConvert<MetadataModel>();
+                }
+                else
+                {
+                    dafAppType = DataDAFAppTypes.View;
+
+                    return new Dictionary<string, JToken>()
+                    {
+                        { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
+                        { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
+                        { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] },
+                        { "StateConfig", dafApp.Details.Metadata["StateConfig"] }
+                    }.JSONConvert<MetadataModel>();
+                }
             }
             else if (dafApp.Details.Metadata.ContainsKey("DAFApplicationID"))
             {

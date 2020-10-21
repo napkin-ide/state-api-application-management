@@ -46,6 +46,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public Dictionary<string, string> DAFAppOptions { get; set; }
 
         [DataMember]
+        public virtual List<DataAppDetails> FixedApplications { get; set; }
+
+        [DataMember]
         public virtual bool Loading { get; set; }
     }
 
@@ -58,6 +61,12 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [DataMember]
         public virtual List<DataDAFAppStatus> AppStati { get; set; }
+
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string DisplayName { get; set; }
 
         [DataMember]
         public virtual string PathGroup { get; set; }
@@ -91,6 +100,23 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [DataMember]
         public virtual int Priority { get; set; }
+
+        [DataMember]
+        public virtual DataAppSecurityDetails Security { get; set; }
+    }
+
+    [Serializable]
+    [DataContract]
+    public class DataAppSecurityDetails
+    {
+        [DataMember]
+        public virtual string[] AccessRights { get; set; }
+        
+        [DataMember]
+        public virtual bool IsPrivate { get; set; }
+        
+        [DataMember]
+        public virtual string[] Licenses { get; set; }
     }
 
     [Serializable]
@@ -120,6 +146,15 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         Redirect,
 
         [EnumMember]
-        DAFAppPointer
-    }
+        DAFAppPointer,
+    
+        [EnumMember]
+        LCU,
+
+        [EnumMember]
+        ViewZip,
+
+        [EnumMember]
+        ViewGit
+}
 }
