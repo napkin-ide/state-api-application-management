@@ -50,6 +50,12 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [DataMember]
         public virtual bool Loading { get; set; }
+
+        [DataMember]
+        public virtual List<ZipAppOption> ZipAppOptions { get; set; }
+
+        [DataMember]
+        public virtual bool ZipLoading { get; set; }
     }
 
     [Serializable]
@@ -131,6 +137,20 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [DataMember]
         public virtual string Name { get; set; }
+    }
+
+    [Serializable]
+    [DataContract]
+    public class ZipAppOption
+    {
+        [DataMember]
+        public virtual string Data { get; set; }
+
+        [DataMember]
+        public virtual string DisplayName { get; set; }
+
+        [DataMember]
+        public virtual string File { get; set; }
     }
 
     [DataContract]

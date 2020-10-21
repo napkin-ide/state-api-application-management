@@ -32,11 +32,15 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
     {
         protected ApplicationManagerClient appMgr;
 
+        protected EnterpriseManagerClient entMgr;
+
         protected IdentityManagerClient idMgr;
 
-        public Refresh(ApplicationManagerClient appMgr, IdentityManagerClient idMgr)
+        public Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr)
         {
             this.appMgr = appMgr;
+
+            this.entMgr = entMgr;
 
             this.idMgr = idMgr;
         }
@@ -55,7 +59,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
                 return await stateBlob.WithStateHarness<DataAppsManagementState, RefreshRequest, DataAppsManagementStateHarness>(req, signalRMessages, log,
                     async (harness, refreshReq, actReq) =>
                 {
-                    await harness.Ensure(appMgr, idMgr, stateDetails.EnterpriseLookup);
+                    await harness.Refresh(appMgr, entMgr, idMgr, stateDetails.EnterpriseLookup);
 
                     return Status.Success;
                 });
