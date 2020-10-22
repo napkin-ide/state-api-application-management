@@ -49,8 +49,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         #endregion
 
         #region Constructors
-        public DataAppsManagementStateHarness(DataAppsManagementState state)
-            : base(state ?? new DataAppsManagementState())
+        public DataAppsManagementStateHarness(DataAppsManagementState state, ILogger log)
+            : base(state ?? new DataAppsManagementState(), log)
         { }
         #endregion
 
@@ -58,6 +58,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual async Task DeleteDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entLookup,
             Guid appId, List<string> lookups)
         {
+            log.LogInformation($"Deleting DAF Applications for {entLookup} from {appId} with lookups {lookups.ToJSON()}");
+
             var dafApps = await appMgr.ListDAFApplications(entLookup, appId);
 
             await lookups.Each(async lookup =>
@@ -65,19 +67,29 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 var dafApp = dafApps.Model.FirstOrDefault(da => da.Lookup == lookup);
 
                 if (dafApp != null)
+                {
+                    log.LogInformation($"Removing DAF Application {lookup} for {appId}");
+
                     await appDev.RemoveDAFApp(appId, dafApp.ID, entLookup);
+                }
             });
 
             dafApps = await appMgr.ListDAFApplications(entLookup, appId);
 
             if (dafApps.Status && dafApps.Model.IsNullOrEmpty())
+            {
+                log.LogInformation($"Removing entire Application {appId}");
+
                 await appDev.RemoveApp(appId, entLookup);
+            }
 
             await LoadApplications(appMgr, entLookup);
         }
 
         public virtual async Task LoadAccessRightOptions(IdentityManagerClient idMgr, string entLookup)
         {
+            log.LogInformation($"Loading Access right options for {entLookup}");
+
             var accessRightsResp = await idMgr.ListAccessRights(entLookup);
 
             State.AccessRightOptions = accessRightsResp?.Model?.Select(ar => ar.Lookup).ToList() ?? new List<string>();
@@ -85,6 +97,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task LoadApplications(ApplicationManagerClient appMgr, string entLookup)
         {
+            log.LogInformation($"Loading Applications for {entLookup}");
+
             var appsResult = await appMgr.ListApplications(entLookup);
 
             //  TODO:  Renable where filter for filtering support.  Each app type will have a different container
@@ -107,6 +121,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     PathGroup = appGroup.Key
                 };
             }).ToList();
+
+            log.LogInformation($"Preparing system applications");
 
             var apiAppDets = State.Applications.FirstOrDefault(app => app.PathGroup == "/api") ?? new DataAppDetails()
             {
@@ -153,6 +169,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         {
             if (State.ActiveAppPathGroup != null)
             {
+                log.LogInformation($"Loading Application View for {entLookup}");
+
                 var appDetails = AllApplications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
 
                 var dafApps = State.DAFApplications;
@@ -203,18 +221,26 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task LoadDAFApplications(ApplicationManagerClient appMgr, string entLookup)
         {
+            log.LogInformation($"Loading DAF Applications for {entLookup}");
+
             State.DAFApplications = new List<DataDAFAppDetails>();
 
             if (!AllApplications.IsNullOrEmpty() && !State.ActiveAppPathGroup.IsNullOrEmpty())
             {
+                log.LogInformation($"Loading active DAF Applications for {entLookup}");
+
                 var activeApp = AllApplications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
 
                 await activeApp.AppIDs.Each(async appId =>
                 {
+                    log.LogInformation($"Listing active DAF Applications for {entLookup} from {appId}");
+
                     var dafApps = await appMgr.ListDAFApplications(entLookup, appId.Key);
 
                     if (dafApps.Status)
                     {
+                        log.LogInformation($"Preparing DAF Application details for {entLookup} from {appId}");
+
                         var dafAppDetails = await getDetailsFromDAFApp(appMgr, entLookup, appId.Key, dafApps.Model);
 
                         lock (activeApp)
@@ -253,6 +279,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr, string entLookup)
         {
+            log.LogInformation($"Refreshing data apps management state for {entLookup}");
+
             await LoadAccessRightOptions(idMgr, entLookup);
 
             await LoadApplications(appMgr, entLookup);
@@ -264,6 +292,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task RefreshZipOptions(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, string entLookup)
         {
+            log.LogInformation($"Refreshing Zip Options for {entLookup}");
+
             State.ZipAppOptions = new List<ZipAppOption>();
 
             var entRes = await entMgr.GetEnterprise(entLookup);
@@ -271,6 +301,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             if (entRes.Status)
             {
                 // var listRes = await appMgr.Get<ListFilesResponse>($"dfs/list/{entRes.Model.ID}/app-uploads/application/zip");
+
+                log.LogInformation($"Listing files for Zip Options");
 
                 var listRes = await appMgr.ListFiles(entRes.Model.ID, $"app-uploads/application/zip");
 
@@ -293,6 +325,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual async Task SaveDAFApp(ApplicationDeveloperClient appDev, ApplicationManagerClient appMgr, string entLookup,
             string host, DataDAFAppDetails dafAppDetails)
         {
+            log.LogInformation($"Saving DAF Application for {entLookup}");
+
             var saveRes = await appDev.SaveAppAndDAFApps(new SaveAppAndDAFAppsRequest()
             {
                 Application = new Application()
@@ -322,6 +356,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entLookup, string appPathGroup)
         {
+            log.LogInformation($"Setting active application for {entLookup} to {appPathGroup}");
+
             State.ActiveAppPathGroup = appPathGroup;
 
             // State.CurrentApplicationTab = 0;
@@ -335,17 +371,23 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         public virtual async Task SetActiveDAFApp(Guid? dafAppId)
         {
+            log.LogInformation($"Setting active DAF Application to {dafAppId}");
+
             State.ActiveDAFAppID = dafAppId;
         }
 
         public virtual async Task SetApplicationTab(int appTab)
         {
+            log.LogInformation($"Setting application tab to {appTab}");
+
             State.CurrentApplicationTab = appTab;
         }
 
         public virtual async Task UploadZips(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, string entLookup,
             List<ZipAppOption> zipApps)
         {
+            log.LogInformation($"Uploading zip application options for {entLookup}");
+
             var regex = new Regex("^data:(?<type>.*);base64,(?<data>.*)$");
 
             var stati = new List<Status>();
@@ -364,6 +406,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
                 if (entRes.Status)
                 {
+                    log.LogInformation($"Saving zip application option file for {entLookup}");
+
                     var saveRes = await appMgr.SaveFile(data, entRes.Model.ID, "", zipApp.File, null, $"app-uploads/{dataType}");
 
                     stati.Add(saveRes.Status);

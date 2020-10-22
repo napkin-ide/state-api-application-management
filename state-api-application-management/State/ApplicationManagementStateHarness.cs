@@ -35,14 +35,16 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         #endregion
 
         #region Constructors
-        public ApplicationManagementStateHarness(ApplicationManagementState state)
-            : base(state ?? new ApplicationManagementState())
+        public ApplicationManagementStateHarness(ApplicationManagementState state, ILogger log)
+            : base(state ?? new ApplicationManagementState(), log)
         { }
         #endregion
 
         #region API Methods
         public virtual async Task Ensure(ApplicationManagerClient appMgr, string entLookup)
         {
+            log.LogInformation($"Refreshing Application Management State.");
+
             State.Applications = new List<Application>();
 
             if (!State.AppType.HasValue)
