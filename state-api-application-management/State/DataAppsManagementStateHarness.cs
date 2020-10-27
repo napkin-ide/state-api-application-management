@@ -277,6 +277,51 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             // }
         }
 
+        public virtual async Task LoadSupportedDAFAppTypes()
+        {
+            State.SupportedDAFAppTypes = new List<DataDAFAppTypes>();
+
+            var activeApp = AllApplications.FirstOrDefault(app => app.PathGroup == State.ActiveAppPathGroup);
+
+            if (activeApp != null)
+            {
+                var activeAppType = State.DAFApplications.FirstOrDefault()?.DAFAppType;
+
+                if (activeAppType == DataDAFAppTypes.API || activeAppType == DataDAFAppTypes.LCU)
+                    State.SupportedDAFAppTypes.Add(activeAppType.Value);
+                else if (activeAppType == DataDAFAppTypes.Redirect || activeAppType == DataDAFAppTypes.View ||
+                    activeAppType == DataDAFAppTypes.ViewZip || activeAppType == DataDAFAppTypes.ViewGit ||
+                    activeAppType == null)
+                {
+                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.View);
+
+                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.Redirect);
+
+                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.ViewZip);
+                }
+                else
+                {
+                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.View);
+
+                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.Redirect);
+
+                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.ViewZip);
+                }
+            }
+            else
+            {
+                State.SupportedDAFAppTypes.Add(DataDAFAppTypes.View);
+
+                State.SupportedDAFAppTypes.Add(DataDAFAppTypes.Redirect);
+
+                State.SupportedDAFAppTypes.Add(DataDAFAppTypes.API);
+
+                State.SupportedDAFAppTypes.Add(DataDAFAppTypes.LCU);
+
+                State.SupportedDAFAppTypes.Add(DataDAFAppTypes.ViewZip);
+            }
+        }
+
         public virtual async Task Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr, string entLookup)
         {
             log.LogInformation($"Refreshing data apps management state for {entLookup}");
@@ -288,6 +333,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             await LoadDAFAppOptions(appMgr, entLookup);
 
             await RefreshZipOptions(appMgr, entMgr, entLookup);
+
+            await LoadSupportedDAFAppTypes();
         }
 
         public virtual async Task RefreshZipOptions(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, string entLookup)
@@ -367,6 +414,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             await LoadDAFAppOptions(appMgr, entLookup);
 
             await LoadAppView(appMgr, entLookup);
+
+            await LoadSupportedDAFAppTypes();
         }
 
         public virtual async Task SetActiveDAFApp(Guid? dafAppId)

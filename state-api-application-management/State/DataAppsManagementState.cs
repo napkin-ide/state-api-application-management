@@ -52,6 +52,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual bool Loading { get; set; }
 
         [DataMember]
+        public virtual List<DataDAFAppTypes> SupportedDAFAppTypes { get; set; }
+
+        [DataMember]
         public virtual List<ZipAppOption> ZipAppOptions { get; set; }
 
         [DataMember]
@@ -117,10 +120,10 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
     {
         [DataMember]
         public virtual string[] AccessRights { get; set; }
-        
+
         [DataMember]
         public virtual bool IsPrivate { get; set; }
-        
+
         [DataMember]
         public virtual string[] Licenses { get; set; }
     }
@@ -167,7 +170,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [EnumMember]
         DAFAppPointer,
-    
+
         [EnumMember]
         LCU,
 
@@ -176,5 +179,5 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [EnumMember]
         ViewGit
-}
+    }
 }
