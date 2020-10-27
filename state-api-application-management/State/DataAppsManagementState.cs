@@ -172,12 +172,6 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         DAFAppPointer,
 
         [EnumMember]
-        LCU,
-
-        [EnumMember]
-        ViewZip,
-
-        [EnumMember]
-        ViewGit
+        LCU
     }
 }

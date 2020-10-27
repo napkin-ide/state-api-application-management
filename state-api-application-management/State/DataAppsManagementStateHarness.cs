@@ -290,22 +290,17 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 if (activeAppType == DataDAFAppTypes.API || activeAppType == DataDAFAppTypes.LCU)
                     State.SupportedDAFAppTypes.Add(activeAppType.Value);
                 else if (activeAppType == DataDAFAppTypes.Redirect || activeAppType == DataDAFAppTypes.View ||
-                    activeAppType == DataDAFAppTypes.ViewZip || activeAppType == DataDAFAppTypes.ViewGit ||
                     activeAppType == null)
                 {
                     State.SupportedDAFAppTypes.Add(DataDAFAppTypes.View);
 
                     State.SupportedDAFAppTypes.Add(DataDAFAppTypes.Redirect);
-
-                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.ViewZip);
                 }
                 else
                 {
                     State.SupportedDAFAppTypes.Add(DataDAFAppTypes.View);
 
                     State.SupportedDAFAppTypes.Add(DataDAFAppTypes.Redirect);
-
-                    State.SupportedDAFAppTypes.Add(DataDAFAppTypes.ViewZip);
                 }
             }
             else
@@ -317,8 +312,6 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 State.SupportedDAFAppTypes.Add(DataDAFAppTypes.API);
 
                 State.SupportedDAFAppTypes.Add(DataDAFAppTypes.LCU);
-
-                State.SupportedDAFAppTypes.Add(DataDAFAppTypes.ViewZip);
             }
         }
 
@@ -560,6 +553,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 {
                     { "APIRoot", dafApp.Details.Metadata["APIRoot"] },
                     { "InboundPath", dafApp.Details.Metadata["InboundPath"] },
+                    { "Lookup", dafApp.Details.Metadata["Lookup"] },
                     { "Methods", dafApp.Details.Metadata["Methods"] },
                     { "Security", dafApp.Details.Metadata["Security"] }
                 }.JSONConvert<MetadataModel>();
@@ -573,44 +567,28 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     { "Redirect", dafApp.Details.Metadata["Redirect"] }
                 }.JSONConvert<MetadataModel>();
             }
-            else if (dafApp.Details.Metadata.ContainsKey("BaseHref") && dafApp.Details.Metadata.ContainsKey("NPMPackage"))
+            else if (dafApp.Details.Metadata.ContainsKey("BaseHref"))
             {
+                var view = dafApp.Details.JSONConvert<DAFLCUApplicationDetails>();
+
+                var package = new Dictionary<string, JToken>()
+                {
+                    { "BaseHref", view.BaseHref },
+                    { "Package", view.Package.JSONConvert<JToken>() },
+                    { "PackageType", view.PackageType.JSONConvert<JToken>() },
+                    { "StateConfig", view.StateConfig.JSONConvert<JToken>() }
+                };
+
                 if (dafApp.Details.Metadata["BaseHref"].ToString().StartsWith("/_lcu/"))
                 {
                     dafAppType = DataDAFAppTypes.LCU;
 
-                    return new Dictionary<string, JToken>()
-                    {
-                        { "Lookup", dafApp.Details.Metadata.ContainsKey("Lookup") ? dafApp.Details.Metadata["Lookup"] : "" },
-                        { "BaseHref", dafApp.Details.Metadata.ContainsKey("BaseHref") ? dafApp.Details.Metadata["BaseHref"] : "" },
-                        { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
-                        { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] },
-                        { "StateConfig", dafApp.Details.Metadata.ContainsKey("StateConfig") ? dafApp.Details.Metadata["StateConfig"] : "" }
-                    }.JSONConvert<MetadataModel>();
+                    package.Add("Lookup", view.Lookup);
                 }
                 else
-                {
                     dafAppType = DataDAFAppTypes.View;
 
-                    return new Dictionary<string, JToken>()
-                    {
-                        { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
-                        { "NPMPackage", dafApp.Details.Metadata["NPMPackage"] },
-                        { "PackageVersion", dafApp.Details.Metadata["PackageVersion"] },
-                        { "StateConfig", dafApp.Details.Metadata["StateConfig"] }
-                    }.JSONConvert<MetadataModel>();
-                }
-            }
-            else if (dafApp.Details.Metadata.ContainsKey("BaseHref") && dafApp.Details.Metadata.ContainsKey("ZipFile"))
-            {
-                dafAppType = DataDAFAppTypes.ViewZip;
-
-                return new Dictionary<string, JToken>()
-                {
-                    { "BaseHref", dafApp.Details.Metadata["BaseHref"] },
-                    { "ZipFile", dafApp.Details.Metadata["ZipFile"] },
-                    { "StateConfig", dafApp.Details.Metadata["StateConfig"] }
-                }.JSONConvert<MetadataModel>();
+                return package.JSONConvert<MetadataModel>();
             }
             else if (dafApp.Details.Metadata.ContainsKey("DAFApplicationID"))
             {
