@@ -575,7 +575,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 {
                     { "BaseHref", view.BaseHref },
                     { "Package", view.Package.JSONConvert<JToken>() },
-                    { "PackageType", view.PackageType.JSONConvert<JToken>() },
+                    { "PackageType", view.PackageType.ToString() },
                     { "StateConfig", view.StateConfig.JSONConvert<JToken>() }
                 };
 
