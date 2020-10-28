@@ -52,7 +52,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual bool Loading { get; set; }
 
         [DataMember]
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(ItemConverterType = typeof(StringEnumConverter))]
         public virtual List<DataDAFAppTypes> SupportedDAFAppTypes { get; set; }
 
         [DataMember]
