@@ -553,7 +553,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 {
                     { "APIRoot", dafApp.Details.Metadata["APIRoot"] },
                     { "InboundPath", dafApp.Details.Metadata["InboundPath"] },
-                    { "Lookup", dafApp.Details.Metadata["Lookup"] },
+                    { "Lookup", dafApp.Details.Metadata.ContainsKey("Lookup") ? dafApp.Details.Metadata["Lookup"] : "" },
                     { "Methods", dafApp.Details.Metadata["Methods"] },
                     { "Security", dafApp.Details.Metadata["Security"] }
                 }.JSONConvert<MetadataModel>();
