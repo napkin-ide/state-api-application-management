@@ -391,6 +391,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 }).ToList()
             }, entLookup, host);
 
+            State.ActiveDAFAppID = null;
+
             await LoadApplications(appMgr, entLookup);
         }
 
