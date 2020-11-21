@@ -64,6 +64,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
             await lookups.Each(async lookup =>
             {
+                lookup = lookup.Trim();
+
                 var dafApp = dafApps.Model.FirstOrDefault(da => da.Lookup == lookup);
 
                 if (dafApp != null)
@@ -391,6 +393,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 }).ToList()
             }, entLookup, host);
 
+            State.ActiveDAFAppID = null;
+
             await LoadApplications(appMgr, entLookup);
         }
 
@@ -516,7 +520,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             DataDAFAppTypes? dafAppType = null;
             var configs = (dafApps ?? new List<DAFApplication>()).ToDictionary(dafApp =>
             {
-                return dafApp.Lookup.IsNullOrEmpty() ? "" : $" {dafApp.Lookup}";
+                return dafApp.Lookup.IsNullOrEmpty() ? "" : dafApp.Lookup.Trim();
             }, dafApp =>
             {
                 return loadDafConfig(dafApp, out dafAppType);
@@ -553,7 +557,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                 {
                     { "APIRoot", dafApp.Details.Metadata["APIRoot"] },
                     { "InboundPath", dafApp.Details.Metadata["InboundPath"] },
-                    { "Lookup", dafApp.Details.Metadata["Lookup"] },
+                    { "Lookup", dafApp.Details.Metadata.ContainsKey("Lookup") ? dafApp.Details.Metadata["Lookup"].ToString().Trim() : "" },
                     { "Methods", dafApp.Details.Metadata["Methods"] },
                     { "Security", dafApp.Details.Metadata["Security"] }
                 }.JSONConvert<MetadataModel>();
