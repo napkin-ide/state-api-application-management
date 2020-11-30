@@ -34,6 +34,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         public virtual Guid? ActiveDAFAppID { get; set; }
 
         [DataMember]
+        public virtual string ActiveHost { get; set; }
+
+        [DataMember]
         public virtual List<DataAppDetails> Applications { get; set; }
 
         [DataMember]
@@ -47,6 +50,9 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
         [DataMember]
         public virtual List<DataAppDetails> FixedApplications { get; set; }
+
+        [DataMember]
+        public virtual GlobalApplicationSettings GlobalAppSettings { get; set; }
 
         [DataMember]
         public virtual bool Loading { get; set; }
@@ -142,6 +148,11 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         [DataMember]
         public virtual string Name { get; set; }
     }
+
+    [Serializable]
+    [DataContract]
+    public class GlobalApplicationSettings : MetadataModel
+    { }
 
     [Serializable]
     [DataContract]
