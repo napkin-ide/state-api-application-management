@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.Personas.Client.Identity;
 using LCU.State.API.NapkinIDE.ApplicationManagement.State;
+using LCU.Personas.Client.Security;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
 {
@@ -36,13 +37,18 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
 
         protected IdentityManagerClient idMgr;
 
-        public Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr)
+        protected SecurityManagerClient secMgr;
+
+        public Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr,
+            SecurityManagerClient secMgr)
         {
             this.appMgr = appMgr;
 
             this.entMgr = entMgr;
 
             this.idMgr = idMgr;
+
+            this.secMgr = secMgr;
         }
 
         [FunctionName("Refresh")]
@@ -59,7 +65,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.Host
                 return await stateBlob.WithStateHarness<DataAppsManagementState, RefreshRequest, DataAppsManagementStateHarness>(req, signalRMessages, log,
                     async (harness, refreshReq, actReq) =>
                 {
-                    await harness.Refresh(appMgr, entMgr, idMgr, stateDetails.EnterpriseLookup);
+                    await harness.Refresh(appMgr, entMgr, idMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Host);
 
                     return Status.Success;
                 });

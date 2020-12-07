@@ -26,6 +26,7 @@ using LCU.Personas.Client.Identity;
 using Newtonsoft.Json.Linq;
 using LCU.Personas.Applications;
 using System.Text.RegularExpressions;
+using LCU.Personas.Client.Security;
 
 namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 {
@@ -279,6 +280,24 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             // }
         }
 
+        public virtual async Task LoadGlobalAppSettings(SecurityManagerClient secMgr, string entLookup)
+        {
+            log.LogInformation($"Loading global app settings {entLookup}");
+
+            var lookups = new[] {
+                $"{State.ActiveHost}:GOOGLE-ANALYTICS-MEASUREMENT-ID"
+            };
+
+            var resp = await secMgr.RetrieveEnterpriseThirdPartyData(entLookup, lookups);
+
+            State.GlobalAppSettings = new GlobalApplicationSettings();
+
+            resp.Model.Each(setting => {
+                if (!setting.Value.IsNullOrEmpty())
+                    State.GlobalAppSettings.Metadata[setting.Key.Replace($"{State.ActiveHost}:", String.Empty)] = setting.Value;
+            });
+        }
+
         public virtual async Task LoadSupportedDAFAppTypes()
         {
             State.SupportedDAFAppTypes = new List<DataDAFAppTypes>();
@@ -317,17 +336,22 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             }
         }
 
-        public virtual async Task Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr, string entLookup)
+        public virtual async Task Refresh(ApplicationManagerClient appMgr, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr,
+            SecurityManagerClient secMgr, string entLookup, string host)
         {
-            log.LogInformation($"Refreshing data apps management state for {entLookup}");
+            log.LogInformation($"Refreshing data apps management state for {entLookup} at {State.ActiveHost}");
 
-            await LoadAccessRightOptions(idMgr, entLookup);
+            if (State.ActiveHost.IsNullOrEmpty())
+                SetActiveHost(host);
 
             await LoadApplications(appMgr, entLookup);
 
-            await LoadDAFAppOptions(appMgr, entLookup);
-
-            await RefreshZipOptions(appMgr, entMgr, entLookup);
+            await Task.WhenAll(
+                LoadAccessRightOptions(idMgr, entLookup),
+                LoadDAFAppOptions(appMgr, entLookup),
+                LoadGlobalAppSettings(secMgr, entLookup),
+                RefreshZipOptions(appMgr, entMgr, entLookup)
+            );
 
             await LoadSupportedDAFAppTypes();
         }
@@ -398,6 +422,23 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             await LoadApplications(appMgr, entLookup);
         }
 
+        public virtual async Task SaveGlobalAppSettings(SecurityManagerClient secMgr, string entLookup, GlobalApplicationSettings settings)
+        {
+            log.LogInformation($"Saving global app settings {entLookup} at {State.ActiveHost}: {settings.ToJSON()}");
+
+            await settings.Metadata.Each(async (setting) =>
+            {
+                var resp = await secMgr.SetEnterpriseThirdPartyData(entLookup, new Dictionary<string, string>()
+                {
+                    { $"{State.ActiveHost}:{setting.Key}", setting.Value.ToString() }
+                });
+
+                return !resp.Status;
+            });
+
+            await LoadGlobalAppSettings(secMgr, entLookup);
+        }
+
         public virtual async Task SetActiveApp(ApplicationManagerClient appMgr, string entLookup, string appPathGroup)
         {
             log.LogInformation($"Setting active application for {entLookup} to {appPathGroup}");
@@ -420,6 +461,13 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             log.LogInformation($"Setting active DAF Application to {dafAppId}");
 
             State.ActiveDAFAppID = dafAppId;
+        }
+
+        public virtual void SetActiveHost(string host)
+        {
+            log.LogInformation($"Setting active host {host}");
+
+            State.ActiveHost = host;
         }
 
         public virtual async Task SetApplicationTab(int appTab)
