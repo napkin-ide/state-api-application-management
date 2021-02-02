@@ -285,7 +285,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
             log.LogInformation($"Loading global app settings {entLookup}");
 
             var lookups = new[] {
-                $"{State.ActiveHost}:GOOGLE-ANALYTICS-MEASUREMENT-ID"
+                $"{State.ActiveHost}:GOOGLE-ANALYTICS-MEASUREMENT-ID",
+                $"{State.ActiveHost}:ORIBI-ANALYTICS-TRACKING-ID"
             };
 
             var resp = await secMgr.RetrieveEnterpriseThirdPartyData(entLookup, lookups);
