@@ -293,7 +293,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
             State.GlobalAppSettings = new GlobalApplicationSettings();
 
-            resp.Model.Each(setting => {
+            resp.Model.Each(setting =>
+            {
                 if (!setting.Value.IsNullOrEmpty())
                     State.GlobalAppSettings.Metadata[setting.Key.Replace($"{State.ActiveHost}:", String.Empty)] = setting.Value;
             });
@@ -342,8 +343,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         {
             log.LogInformation($"Refreshing data apps management state for {entLookup} at {State.ActiveHost}");
 
-            if (State.ActiveHost.IsNullOrEmpty())
-                SetActiveHost(host);
+            // if (State.ActiveHost.IsNullOrEmpty())
+            SetActiveHost(host);
 
             await LoadApplications(appMgr, entLookup);
 
