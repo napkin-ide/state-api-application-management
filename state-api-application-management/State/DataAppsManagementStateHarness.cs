@@ -342,7 +342,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
         {
             log.LogInformation($"Refreshing data apps management state for {entLookup} at {State.ActiveHost}");
 
-            if (State.ActiveHost.IsNullOrEmpty())
+            // if (State.ActiveHost.IsNullOrEmpty())
                 SetActiveHost(host);
 
             await LoadApplications(appMgr, entLookup);
