@@ -630,7 +630,8 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
                     { "BaseHref", view.BaseHref },
                     { "Package", view.Package.JSONConvert<JToken>() },
                     { "PackageType", view.PackageType.ToString() },
-                    { "StateConfig", view.StateConfig.JSONConvert<JToken>() }
+                    { "RegScripts", view.RegScripts },
+                    { "StateConfig", view.StateConfig?.JSONConvert<JToken>() }
                 };
 
                 if (dafApp.Details.Metadata["BaseHref"].ToString().StartsWith("/_lcu/"))
