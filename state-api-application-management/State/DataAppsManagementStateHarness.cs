@@ -286,6 +286,7 @@ namespace LCU.State.API.NapkinIDE.ApplicationManagement.State
 
             var lookups = new[] {
                 $"{State.ActiveHost}:GOOGLE-ANALYTICS-MEASUREMENT-ID",
+                $"{State.ActiveHost}:GOOGLE-TAG-MANAGER-ID",
                 $"{State.ActiveHost}:ORIBI-ANALYTICS-TRACKING-ID"
             };
 
